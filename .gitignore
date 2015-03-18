@@ -1,0 +1,14 @@
+# Ignore anything in the root of the directory
+/*
+# _Except_ a few things
+!/README.md
+!/.gitignore
+!/Alex/
+!/Anshul/
+!/Sean/
+
+# Ignore vim swap files
+*.swp
+
+# Ignore Python bytecompiled files
+*.pyc
