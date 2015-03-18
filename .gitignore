@@ -10,5 +10,8 @@
 # Ignore vim swap files
 *.swp
 
-# Ignore Python bytecompiled files
+# Ignore Python and Cython bytecompiled files
 *.pyc
+*.so
+*.pyd
+/Sean/py_utils/*/*.c
