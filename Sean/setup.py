@@ -10,9 +10,6 @@ extensions = [
               sources=["py_utils/images/access_image.pyx"],
               include_dirs=[np.get_include()]),
     Extension("*",
-              sources=["py_utils/ml/nn_cy.pyx"],
-              include_dirs=[np.get_include()]),
-    Extension("*",
               sources=["py_utils/ml/sigmoid.pyx"],
               include_dirs=[np.get_include()]),
 ]
