@@ -161,7 +161,7 @@ class NeuralNetwork(object):
             thetaT = thetaTs[dim[0]:dim[1]].reshape(layer.shapeT)
             a = layer.feedfwd(a, thetaT)
 
-        if self.theta_dim[-1, 3] == 1:
+        if self.layers[-1].shape[0] == 1:
             a = np.round(a).astype(int)
         else:
             a = np.argmax(a, axis=1)

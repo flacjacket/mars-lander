@@ -11,15 +11,16 @@ import scipy.optimize as opt
 file_path = os.path.abspath(__file__)
 file_dir = os.path.dirname(file_path)
 jpl_dir = os.path.split(file_dir)[0]
+root_dir = os.path.split(jpl_dir)[0]
 
 sys.path.append(jpl_dir)
 
-terrain_dir = os.path.join(jpl_dir, "training data", "terrainS0C0R10_100")
+terrain_dir = os.path.join(root_dir, "training data", "terrainS0C0R10_100")
 terrain_file = os.path.join(terrain_dir, "terrainS0C0R10_100.pgm")
 train_file = os.path.join(terrain_dir, "terrainS0C0R10_100.invHazard.pgm")
 
-training_output = os.path.join(jpl_dir, "trained.pgm")
-test_output = os.path.join(jpl_dir, "test.pgm")
+training_output = os.path.join(root_dir, "trained.pgm")
+test_output = os.path.join(root_dir, "test.pgm")
 
 nrows = ncols = 1000
 offset = 21
