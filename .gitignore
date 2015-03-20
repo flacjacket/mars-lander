@@ -14,4 +14,7 @@
 *.pyc
 *.so
 *.pyd
+
+# Some specific things for Sean
 /Sean/py_utils/*/*.c
+/Sean/build

@@ -126,60 +126,32 @@ class NeuralNetwork(object):
 
         """
         m = df_output.shape[0]
-        grad = np.zeros_like(thetas)
+        grad = np.empty_like(thetas)
         thetas = [thetas[dim[0]:dim[1]].reshape(layer.shapeT)
                   for layer, dim in zip(self.layers, self.theta_dim)]
 
-        j = 0
-        a1 = df_input
-        a2 = self.layers[0].feedfwd(df_input, thetas[0], store=True)
-        a3 = self.layers[1].feedfwd(a2, thetas[1], store=True)
-
-        z2 = self.layers[0].z
-
-        delta3 = a3 - df_output
-        delta2 = np.dot(delta3, thetas[1].T)[:, 1:] * sigmoid_gradient(z2)
-
-        # theta1_grad = np.dot(a1.T, delta2) / m
-        # theta1_grad[1:] += self._lambda * thetas[0][1:] / m
-        theta1_grad = np.zeros_like(thetas[0])
-        theta1_grad[0] = np.sum(delta2, axis=0) / m
-        theta1_grad[1:] = (np.dot(a1.T, delta2) + self._lambda * thetas[0][1:]) / m
-
-        theta2_grad = np.zeros_like(thetas[1])
-        theta2_grad[0] = np.sum(delta3, axis=0) / m
-        theta2_grad[1:] = (np.dot(a2.T, delta3) + self._lambda * thetas[1][1:]) / m
-
-        grad[:] = np.hstack((theta1_grad.flatten(), theta2_grad.flatten()))
-
-        #a = df_input
+        t = 0
+        a = df_input
         # Feed the input forward, also storing the activations
-        #for layer, theta in zip(self.layers, thetas):
-        #    a = layer.feedfwd(a, theta, store=True)
-        #    a0.append(a)
-        #    t += layer.regularization(theta)
+        for layer, theta in zip(self.layers, thetas):
+            a = layer.feedfwd(a, theta, store=True)
+            t += layer.regularization(theta)
 
         # Get the cost out as well
-        #j = (self._cost_unregularized(a, df_output) + t * self._lambda / 2) / m
-
-
+        j = (self._cost_unregularized(a, df_output) + t * self._lambda / 2) / m
 
         # Backpropagate the gradient
-        # delta = a - df_output
-        # for layer, dim, prev_theta in zip(self.layers[-2::-1], self.theta_dim[::-1], thetas[::-1]):
-        #    print(layer.a.shape)
-        #    print(delta.shape)
-        #    a = np.vstack((np.ones((1, m)), layer.a.T))
-        #    grad[dim[0]:dim[1]] = np.dot(a, delta).flatten() / m
-        #    grad[dim[0]+delta.shape[1]:dim[1]] += self._lambda * prev_theta[1:].flatten() / m
-        #    delta = np.dot(delta, prev_theta[1:].T) * sigmoid_gradient(layer.z)
+        delta = a - df_output
+        for layer, dim, prev_theta in zip(self.layers[-2::-1], self.theta_dim[::-1], thetas[::-1]):
+            grad[dim[0]:dim[0]+delta.shape[1]] = np.sum(delta, axis=0)
+            grad[dim[0]+delta.shape[1]:dim[1]] = (np.dot(layer.a.T, delta) + self._lambda * prev_theta[1:]).flatten()
+            delta = np.dot(delta, prev_theta.T)[:, 1:] * sigmoid_gradient(layer.z)
 
-        #dim = self.theta_dim[0]
-        #prev_theta = thetas[0]
-        #grad[dim[0]+delta.shape[1]:dim[1]] = \
-        #    (np.dot(df_input.T, delta) + self._lambda * prev_theta[1:]).flatten() / m
+        dim = self.theta_dim[0]
+        grad[0:delta.shape[1]] = np.sum(delta, axis=0)
+        grad[delta.shape[1]:dim[1]] = (np.dot(df_input.T, delta) + self._lambda * thetas[0][1:]).flatten()
 
-        return j, grad
+        return j, grad / m
 
     def predict(self, df_input, thetaTs):
         """Predict the output for given input parameters"""

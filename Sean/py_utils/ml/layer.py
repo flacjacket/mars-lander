@@ -21,7 +21,7 @@ class Layer(object):
 
         a = sigmoid(z)
         if store:
-            # self.a = a
+            self.a = a
             self.z = z
 
         return a
