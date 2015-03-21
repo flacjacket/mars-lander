@@ -14,4 +14,8 @@
 *.pyc
 *.so
 *.pyd
+
+# Some specific things for Sean
+iterate.dat
 /Sean/py_utils/*/*.c
+/Sean/build

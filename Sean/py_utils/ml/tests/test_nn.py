@@ -21,11 +21,13 @@ def test_neuralnetwork():
 
     theta2_index = hidden_size * (input_size + 1)
     end_index = theta2_index + (hidden_size + 1)
-    theta_dim = np.array([[0, theta2_index, (input_size + 1), hidden_size],
-                          [theta2_index, end_index, (hidden_size + 1), 1]])
+    theta_dim = [(0, theta2_index), (theta2_index, end_index)]
 
-    assert nn.theta_dim.shape == (2, 4)
-    assert np.all(nn.theta_dim == theta_dim)
+    assert nn.theta_dim == theta_dim
+
+    assert len(nn.layers) == 2
+    assert nn.layers[0].shape == (hidden_size, input_size + 1)
+    assert nn.layers[1].shape == (1, hidden_size + 1)
 
     theta = nn.gen_theta()
     assert theta.size == hidden_size * (input_size + 1) + (hidden_size + 1)
@@ -40,18 +42,23 @@ def test_neuralnetwork():
     theta3_index = theta2_index + hidden_sizes[1] * (hidden_sizes[0] + 1)
     theta4_index = theta3_index + hidden_sizes[2] * (hidden_sizes[1] + 1)
     end_index = theta4_index + (hidden_sizes[2] + 1)
-    theta_dim = np.array([[0, theta2_index, hidden_sizes[0], (input_size + 1)],
-                          [theta2_index, theta3_index, hidden_sizes[1], (hidden_sizes[0] + 1)],
-                          [theta3_index, theta4_index, hidden_sizes[2], (hidden_sizes[1] + 1)],
-                          [theta4_index, end_index, 1, (hidden_sizes[2] + 1)]])
+    theta_dim = [(0, theta2_index),
+                 (theta2_index, theta3_index),
+                 (theta3_index, theta4_index),
+                 (theta4_index, end_index)]
 
     theta_size = hidden_sizes[0] * (input_size + 1) + \
         hidden_sizes[1] * (hidden_sizes[0] + 1) + \
         hidden_sizes[2] * (hidden_sizes[1] + 1) + \
         (hidden_sizes[0] + 1)
 
-    assert nn.theta_dim.shape == (4, 4)
-    #assert np.all(nn.theta_dim == theta_dim)
+    assert nn.theta_dim == theta_dim
+
+    assert len(nn.layers) == 4
+    assert nn.layers[0].shape == (hidden_sizes[0], input_size + 1)
+    assert nn.layers[1].shape == (hidden_sizes[1], hidden_sizes[0] + 1)
+    assert nn.layers[2].shape == (hidden_sizes[2], hidden_sizes[1] + 1)
+    assert nn.layers[3].shape == (1, hidden_sizes[2] + 1)
 
     theta = nn.gen_theta()
     assert theta.size == theta_size
@@ -67,18 +74,23 @@ def test_neuralnetwork():
     theta3_index = theta2_index + hidden_sizes[1] * (hidden_sizes[0] + 1)
     theta4_index = theta3_index + hidden_sizes[2] * (hidden_sizes[1] + 1)
     end_index = theta4_index + output_size * (hidden_sizes[2] + 1)
-    theta_dim = np.array([[0, theta2_index, hidden_sizes[0], (input_size + 1)],
-                          [theta2_index, theta3_index, hidden_sizes[1], (hidden_sizes[0] + 1)],
-                          [theta3_index, theta4_index, hidden_sizes[2], (hidden_sizes[1] + 1)],
-                          [theta4_index, end_index, output_size, (hidden_sizes[2] + 1)]])
+    theta_dim = [(0, theta2_index),
+                 (theta2_index, theta3_index),
+                 (theta3_index, theta4_index),
+                 (theta4_index, end_index)]
 
     theta_size = hidden_sizes[0] * (input_size + 1) + \
         hidden_sizes[1] * (hidden_sizes[0] + 1) + \
         hidden_sizes[2] * (hidden_sizes[1] + 1) + \
         output_size * (hidden_sizes[0] + 1)
 
-    assert nn.theta_dim.shape == (4, 4)
-    #assert np.all(nn.theta_dim == theta_dim)
+    assert nn.theta_dim == theta_dim
+
+    assert len(nn.layers) == 4
+    assert nn.layers[0].shape == (hidden_sizes[0], input_size + 1)
+    assert nn.layers[1].shape == (hidden_sizes[1], hidden_sizes[0] + 1)
+    assert nn.layers[2].shape == (hidden_sizes[2], hidden_sizes[1] + 1)
+    assert nn.layers[3].shape == (output_size, hidden_sizes[2] + 1)
 
     theta = nn.gen_theta()
     assert theta.size == theta_size
@@ -97,23 +109,24 @@ def test_cost():
     data = np.load(cost_npzfile)
     theta1 = data['theta1']
     theta2 = data['theta2']
+    thetaT = np.hstack([theta1.T.flatten(), theta2.T.flatten()])
 
     assert theta1.shape == (25, 401)
     assert theta2.shape == (10, 26)
-
-    nn = NeuralNetwork(400, 25, 10)
-    theta = np.ascontiguousarray(np.hstack([theta1.T.flatten(), theta2.T.flatten()]))
 
     # Load the data for the neural network
     df_x = data['x']
     df_y = data['y']
     df_y = np.eye(10, dtype=np.uint8)[df_y]
 
-    assert abs(nn.cost(df_x, df_y, theta) - cost_noreg) < epsilon
+    # Test with theta pased in
+    nn = NeuralNetwork(400, 25, 10)
 
+    cost = nn.cost(df_x, df_y, thetaT)
+    assert abs(cost - cost_noreg) < epsilon
     nn.set_lambda(3)
-
-    assert abs(nn.cost(df_x, df_y, theta) - cost_reg) < epsilon
+    cost = nn.cost(df_x, df_y, thetaT)
+    assert abs(cost - cost_reg) < epsilon
 
 
 def test_backprop():
@@ -123,22 +136,55 @@ def test_backprop():
     data = np.load(cost_npzfile)
     theta1 = data['theta1']
     theta2 = data['theta2']
-
-    nn = NeuralNetwork(400, 25, 10)
-    theta = np.ascontiguousarray(np.hstack([theta1.T.flatten(), theta2.T.flatten()]))
+    theta = np.hstack([theta1.T.flatten(), theta2.T.flatten()])
 
     # Load the data for the neural network
     df_x = data['x']
     df_y = data['y']
     df_y = np.eye(10, dtype=np.uint8)[df_y]
 
-    nn.set_lambda(3)
+    # Test with theta pased in
+    nn1 = NeuralNetwork(400, 25, 10)
+    nn1.set_lambda(3)
 
-    assert abs(nn.cost(df_x, df_y, theta) - cost_reg) < epsilon
+    assert abs(nn1.cost(df_x, df_y, theta) - cost_reg) < epsilon
 
     alpha = 0.5
-    _, grad = nn.backpropagate(df_x, df_y, theta)
+    _, grad = nn1.backpropagate(df_x, df_y, theta)
+
+    e = 1e-4
+    N = 50
+    for i in range(len(theta) // N):
+        d = np.zeros_like(theta)
+        d[i * N] = e
+        cost1 = nn1.cost(df_x, df_y, theta - d)
+        cost2 = nn1.cost(df_x, df_y, theta + d)
+        assert abs(grad[i * N] - (cost2 - cost1) / (2 * e)) < 1e-10
     theta -= grad * alpha
 
-    assert abs(nn.cost(df_x, df_y, theta) - cost_reg) > epsilon
-    assert nn.cost(df_x, df_y, theta) < cost_reg
+    assert abs(nn1.cost(df_x, df_y, theta) - cost_reg) > epsilon
+    assert nn1.cost(df_x, df_y, theta) < cost_reg
+
+#    # Test with theta loaded normally
+#    nn2 = NeuralNetwork(400, 25, 10)
+#    nn2.load_theta(theta1, theta2)
+#    nn2.set_lambda(3)
+#
+#    alpha = 0.5
+#    _, grad = nn2.backpropagate(df_x, df_y)
+#    theta -= grad * alpha
+#
+#    assert abs(nn2.cost(df_x, df_y, theta) - cost_reg) > epsilon
+#    assert nn2.cost(df_x, df_y, theta) < cost_reg
+#
+#    # Test with theta loaded flat
+#    nn3 = NeuralNetwork(400, 25, 10)
+#    nn3.load_theta_flat(theta)
+#    nn3.set_lambda(3)
+#
+#    alpha = 0.5
+#    _, grad = nn3.backpropagate(df_x, df_y)
+#    theta -= grad * alpha
+#
+#    assert abs(nn3.cost(df_x, df_y) - cost_reg) > epsilon
+#    assert nn3.cost(df_x, df_y) < cost_reg

@@ -2,8 +2,11 @@
 Neural network class
 """
 
+from __future__ import division
+
 import numpy as np
-from .nn_cy import _feedfwd, _cost, _grad
+from .layer import Layer
+from .sigmoid import sigmoid_gradient
 
 
 class NeuralNetwork(object):
@@ -34,26 +37,33 @@ class NeuralNetwork(object):
         self._lambda = 0
 
         # Randomly initialize the edge weights
-        map_from = np.array([input_size] + list(hidden_sizes)) + 1
-        map_to = np.array(list(hidden_sizes) + [output_size])
+        _froms = np.array([input_size] + list(hidden_sizes))
+        _tos = np.array(list(hidden_sizes) + [output_size])
 
-        theta_ind = np.cumsum(map_to * map_from)
-        theta_ind0 = theta_ind.copy()
-        theta_ind0[1:] = theta_ind0[:-1]
-        theta_ind0[0] = 0
+        self.layers = [Layer(_from, _to) for _from, _to in zip(_froms, _tos)]
 
-        self.theta_dim = np.ascontiguousarray(
-                np.vstack([theta_ind0, theta_ind, map_from, map_to]).T
-        )
+        cumsum = np.cumsum((_froms + 1) * _tos)
+        self.theta_dim = list(zip(np.append([0], cumsum), cumsum))
 
-    def gen_theta(self, epsilon_init=0.12):
-        theta_len = self.theta_dim[-1, 1]
-        return 2 * epsilon_init * np.random.rand(theta_len) - epsilon_init
+    def gen_theta(self, epsilon_init=0.12, store=False):
+        return np.hstack(layer.gen_theta(epsilon_init, store=store).flatten() for layer in self.layers)
+
+    def load_theta_flat(self, theta):
+        for dim, layer in zip(self.theta_dim, self.layers):
+            layer.theta = theta[dim[0]:dim[1]].reshape(layer.shape)
+
+    def load_theta(self, *thetas):
+        for theta, layer in zip(thetas, self.layers):
+            layer.theta = theta
 
     def set_lambda(self, new_lambda):
         self._lambda = new_lambda
 
-    def cost(self, df_input, df_output, theta):
+    def _cost_unregularized(self, output_layer, df_output):
+        return -np.sum(df_output * np.log(output_layer) +
+                       (1 - df_output) * np.log(1 - output_layer))
+
+    def cost(self, df_input, df_output, thetaTs):
         """Compute the cost of the current neural network
 
         Computes the cost for the given neural network on the set of input data
@@ -75,10 +85,21 @@ class NeuralNetwork(object):
                 cost of the current current neural network on the given data
 
         """
-        a = _feedfwd(df_input, theta, self.theta_dim)[0][-1]
-        return _cost(a, df_output, theta, self.theta_dim, self._lambda)
+        m = df_output.shape[0]
 
-    def backpropagate(self, df_input, df_output, theta):
+        t = 0
+        a = df_input
+        # Feed the input forward
+        for layer, dim in zip(self.layers, self.theta_dim):
+            thetaT = thetaTs[dim[0]:dim[1]].reshape(layer.shapeT)
+            a = layer.feedfwd(a, thetaT)
+            t += layer.regularization(thetaT)
+
+        # Compute and return the cost
+        return (self._cost_unregularized(a, df_output) +
+                t * self._lambda / 2) / m
+
+    def backpropagate(self, df_input, df_output, thetas):
         """Compute the cost and the back propagate the gradient
 
         Computes the cost for the given neural network on the set of input data
@@ -104,22 +125,45 @@ class NeuralNetwork(object):
                 all the theta matrices)
 
         """
-        # Compute the forward propagation parameters
-        a, z = _feedfwd(df_input, theta, self.theta_dim)
+        m = df_output.shape[0]
+        grad = np.empty_like(thetas)
+        thetas = [thetas[dim[0]:dim[1]].reshape(layer.shapeT)
+                  for layer, dim in zip(self.layers, self.theta_dim)]
+
+        t = 0
+        a = df_input
+        # Feed the input forward, also storing the activations
+        for layer, theta in zip(self.layers, thetas):
+            a = layer.feedfwd(a, theta, store=True)
+            t += layer.regularization(theta)
+
         # Get the cost out as well
-        j = _cost(a[-1], df_output, theta, self.theta_dim, self._lambda)
-        # Compute the gradient
-        grad = _grad(a, z, df_input, df_output, theta, self.theta_dim, self._lambda)
+        j = (self._cost_unregularized(a, df_output) + t * self._lambda / 2) / m
 
-        return j, grad
+        # Backpropagate the gradient
+        delta = a - df_output
+        for layer, dim, prev_theta in zip(self.layers[-2::-1], self.theta_dim[::-1], thetas[::-1]):
+            grad[dim[0]:dim[0]+delta.shape[1]] = np.sum(delta, axis=0)
+            grad[dim[0]+delta.shape[1]:dim[1]] = (np.dot(layer.a.T, delta) + self._lambda * prev_theta[1:]).flatten()
+            delta = np.dot(delta, prev_theta.T)[:, 1:] * sigmoid_gradient(layer.z)
 
-    def predict(self, df_input, theta):
+        dim = self.theta_dim[0]
+        grad[0:delta.shape[1]] = np.sum(delta, axis=0)
+        grad[delta.shape[1]:dim[1]] = (np.dot(df_input.T, delta) + self._lambda * thetas[0][1:]).flatten()
+
+        return j, grad / m
+
+    def predict(self, df_input, thetaTs):
         """Predict the output for given input parameters"""
-        df_output = _feedfwd(df_input, theta, self.theta_dim)[0][-1]
+        a = df_input
+        # Feed the input forward
+        for layer, dim in zip(self.layers, self.theta_dim):
+            thetaT = thetaTs[dim[0]:dim[1]].reshape(layer.shapeT)
+            a = layer.feedfwd(a, thetaT)
 
-        if self.theta_dim[-1, 3] == 1:
-            df_output = np.round(df_output).astype(int)
+        if self.layers[-1].shape[0] == 1:
+            a = np.round(a).astype(int)
         else:
-            df_output = np.argmax(df_output, axis=1)
+            a = np.argmax(a, axis=1)
 
-        return df_output
+        return a

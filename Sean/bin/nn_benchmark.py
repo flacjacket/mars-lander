@@ -8,8 +8,9 @@ import timeit
 file_path = os.path.abspath(__file__)
 file_dir = os.path.dirname(file_path)
 jpl_dir = os.path.split(file_dir)[0]
+training_dir = os.path.split(jpl_dir)[0]
 
-terrain_dir = os.path.join(jpl_dir, "training data", "terrainS0C0R10_100")
+terrain_dir = os.path.join(training_dir, "training data", "terrainS0C0R10_100")
 terrain_file = os.path.join(terrain_dir, "terrainS0C0R10_100.pgm")
 solution_file = os.path.join(terrain_dir, "terrainS0C0R10_100.invHazard.pgm")
 

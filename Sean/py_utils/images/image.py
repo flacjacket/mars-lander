@@ -1,6 +1,7 @@
 import numpy as np
 
 from .access_image import access_image
+from .access_height import access_height
 
 
 class Image(object):
@@ -23,5 +24,9 @@ class Image(object):
 
         assert isinstance(x, int) and isinstance(y, int)
 
-        return access_image(self._image, self.col_ind, self.row_ind,
-                            x, y, self.size)
+        if self._image.dtype == np.uint8:
+            return access_image(self._image, self.col_ind, self.row_ind,
+                                x, y, self.size)
+        elif self._image.dtype == np.float32:
+            return access_height(self._image, self.col_ind, self.row_ind,
+                                 x, y, self.size)
