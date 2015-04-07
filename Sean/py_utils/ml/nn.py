@@ -114,6 +114,9 @@ class NeuralNetwork(object):
             df_output: numpy array
                 (N x output_size) numpy array of the desired output
 
+            thetas: numpy array
+                Unrolled array of all the theta.T matrices
+
         Returns
         =======
 

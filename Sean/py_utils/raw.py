@@ -7,5 +7,5 @@ def read_raw(filename, height, width):
         input_buf = f.read()
 
     return np.frombuffer(
-        input_buf, dtype=np.float32, count=height * width
+        input_buf, dtype='>f4', count=height * width
     ).copy().reshape((height, width))
