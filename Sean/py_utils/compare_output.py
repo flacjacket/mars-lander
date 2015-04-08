@@ -1,14 +1,5 @@
-import os
-import sys
-
 import numpy as np
 import scipy.misc
-
-file_path = os.path.abspath(__file__)
-file_dir = os.path.dirname(file_path)
-jpl_dir = os.path.split(file_dir)[0]
-
-sys.path.append(jpl_dir)
 
 SAFE = 0xff
 UNSAFE = 0x00
@@ -53,20 +44,30 @@ def compare_output(df_gen, df_cmp, output):
 
     scipy.misc.imsave(output, df_diff)
 
+    def f_score(tp, tn, fp, fn):
+        prec = tp / (tp + fp)
+        rec = tp / (tp + fn)
+        return 2 * prec * rec / (prec + rec)
+
+    f1 = f_score(results[0], results[1], results[2], results[3])
+    f2 = f_score(results[1], results[0], results[3], results[2])
+
     total = sum(results)
     total_safe = results[0] + results[3]  # correct safe + incorrect unsafe
     total_unsafe = results[1] + results[2]  # correct unsafe + incorrect safe
 
     per_correct = 100 * (results[0] + results[1]) / total
-    per_inc_safe = 100 * results[2] / total
-    per_inc_unsafe = 100 * results[3] / total
+    # per_inc_safe = 100 * results[2] / total
+    # per_inc_unsafe = 100 * results[3] / total
 
     per_safe = 100 * results[0] / total_safe
     per_unsafe = 100 * results[1] / total_unsafe
 
-    print("Correctly classified:          %4.1f%%" % per_correct)
-    print("Incorrectly classified safe:   %4.1f%%" % per_inc_safe)
-    print("Incorrectly classified unsafe: %4.1f%%" % per_inc_unsafe)
+    print("Accuracy:          %4.1f%%" % per_correct)
+    print("F1 (safe):         %4.2f" % f1)
+    print("F1 (unsafe):       %4.2f" % f2)
+    # print("Incorrectly classified safe:   %4.1f%%" % per_inc_safe)
+    # print("Incorrectly classified unsafe: %4.1f%%" % per_inc_unsafe)
     print()
     print("Safe classification accuracy:   %4.1f%% (%d / %d)" %
           (per_safe, results[0], total_safe))
