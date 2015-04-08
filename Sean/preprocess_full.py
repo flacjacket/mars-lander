@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from py_utils.preprocessing import check_full
 
 from py_utils.compare_output import compare_output
