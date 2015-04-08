@@ -10,10 +10,12 @@
 # Ignore vim swap files
 *.swp
 
-# Ignore Python and Cython bytecompiled files
+# Ignore Python bytecompiled files
 *.pyc
 *.so
-*.pyd
+
+# Ignore C compiled files
+*.o
 
 # Some specific things for Sean
 iterate.dat

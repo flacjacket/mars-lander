@@ -5,8 +5,6 @@
 #ifndef _READRAW_H
 #define _READRAW_H
 
-#include <array>
-
 #define NROWS 500
 #define NCOLS 500
 
