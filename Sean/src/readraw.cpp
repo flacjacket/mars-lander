@@ -1,7 +1,7 @@
 #include <array>
 #include <fstream>
 
-#include "readraw.h"
+#include "height_params.h"
 #include "error.h"
 
 static void endian_swap(float *longone)
@@ -23,8 +23,7 @@ static void endian_swap(float *longone)
     longptr->byte3 = temp;
 }
 
-std::array<float, NROWS*NCOLS> read_raw(const char *filename) {
-    std::array<float, NROWS*NCOLS> data;
+void read_raw(const char *filename, std::array<float, NROWS*NCOLS> &data) {
     std::ifstream f (filename, std::ios::in | std::ios::binary);
 
     if (f.is_open()) {
@@ -42,6 +41,4 @@ std::array<float, NROWS*NCOLS> read_raw(const char *filename) {
     for (int i = 0; i < NCOLS*NROWS; i++) {
         endian_swap(&data[i]);
     }
-
-    return data;
 }

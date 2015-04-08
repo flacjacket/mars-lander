@@ -5,11 +5,8 @@
 #ifndef _PREPROCESS_H
 #define _PREPROCESS_H
 
-#include <array>
+#include "height_params.h"
 
-#include "readraw.h"
-
-std::array<unsigned char, 4*NROWS*NCOLS>
-preprocess_angle(std::array<float, NROWS*NCOLS> data);
+void preprocess_angle(std::array<float, NROWS*NCOLS> &data, std::array<unsigned char, 4 * NROWS*NCOLS>& output);
 
 #endif // _PREPROCESS_H

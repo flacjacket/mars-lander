@@ -3,7 +3,7 @@
 #include <cmath>
 #include <openblas/cblas.h>
 
-#include "readraw.h"
+#include "height_params.h"
 
 #define SPACING 0.2
 
@@ -20,9 +20,7 @@
 #define SETOUTPUT(output, i, j) \
     output[2*i*2*NCOLS + 2*j] = output[2*i*2*NCOLS + 2*j+1] = output[(2*i+1)*2*NCOLS + 2*j] = output[(2*i+1)*2*NCOLS + 2*j+1]
 
-std::array<unsigned char, 4*NROWS*NCOLS> preprocess_angle(std::array<float, NROWS*NCOLS> data) {
-    std::array<unsigned char, 4*NROWS*NCOLS> output;
-
+void preprocess_angle(std::array<float, NROWS*NCOLS> &data, std::array<unsigned char, 4 * NROWS*NCOLS>& output) {
     std::array<float, ZH*ZW> z_top;
     std::array<float, ZH*ZW> z_bot;
 
@@ -60,7 +58,7 @@ std::array<unsigned char, 4*NROWS*NCOLS> preprocess_angle(std::array<float, NROW
                           &z_bot[k * ZW]);
             }
 
-            // z_top = -1 * z_bot + z_top
+            // z_bot = -1 * z_top + z_bot
             cblas_saxpy(ZH*ZW, -1., &z_top[0], 1, &z_bot[0], 1);
 
             // figure out if any cause it to be false
@@ -73,6 +71,4 @@ std::array<unsigned char, 4*NROWS*NCOLS> preprocess_angle(std::array<float, NROW
             }
         }
     }
-
-    return output;
 }

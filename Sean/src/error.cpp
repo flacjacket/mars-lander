@@ -6,6 +6,7 @@
 
 #include <cstdarg>
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
 
 #define MAXBUF 1024

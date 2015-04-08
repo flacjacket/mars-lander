@@ -5,9 +5,8 @@
 #ifndef _READRAW_H
 #define _READRAW_H
 
-#define NROWS 500
-#define NCOLS 500
+#include "height_params.h"
 
-std::array<float, NROWS*NCOLS> read_raw(const char *filename);
+void read_raw(const char *filename, std::array<float, NROWS*NCOLS> &data);
 
 #endif // _READRAW_H
