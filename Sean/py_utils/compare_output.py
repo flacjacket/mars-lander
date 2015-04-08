@@ -14,7 +14,7 @@ def generate_diff(df1, df2):
 
     s = list(df1.shape) + [3]
 
-    df_out = np.empty(s)
+    df_out = np.zeros(s)
 
     # both match
     cor_safe = np.logical_and(df1 == SAFE, df2 == SAFE)
