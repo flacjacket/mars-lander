@@ -78,8 +78,8 @@ def check_full(df_in, r=17, r_foot=2.5, angle=10, height=0.41, buffer=10, smooth
 
     for xi in range(buffer, df_in.shape[0]-buffer):
         for yi in range(buffer, df_in.shape[1]-buffer):
-            Z = df_in[xi-(r+1)//2:xi+(r+3)//2, yi-(r+1)//2:yi+(r+3)//2]
-            dZ_foot = (Z[(r+1)//2::-1, :] - Z[(r+1)//2:, ::-1])[sel_foot]
+            Z = df_in[yi-(r+1)//2:yi+(r+3)//2, xi-(r+1)//2:xi+(r+3)//2]
+            dZ_foot = (Z[(r+1)//2::-1, ::-1] - Z[(r+1)//2:, :])[sel_foot]
             _angle = np.abs(np.arctan2(dZ_foot, foot_dist))
 
             if np.any(_angle > angle):
@@ -113,6 +113,6 @@ def check_full(df_in, r=17, r_foot=2.5, angle=10, height=0.41, buffer=10, smooth
         df_out = _smooth(df_out, smooth)
 
     df_out = np.hstack([df_out, df_out])
-    df_out = np.vstack([df_out.flatten(), df_out.flatten()]).T.reshape(1000, 1000)
+    df_out = np.vstack([df_out.flatten(), df_out.flatten()]).T.reshape(1000, 1000).T
 
     return df_out
