@@ -15,7 +15,6 @@ void print_tp(std::chrono::system_clock::time_point tp1, std::chrono::system_clo
     std::cout << "Took " << diff.count() << " ms" << std::endl;
 }
 
-
 int main() {
     std::array<float, NROWS*NCOLS> data;
     std::array<unsigned char, 4*NROWS*NCOLS> output;
@@ -34,5 +33,5 @@ int main() {
     print_tp(tp1, tp2);
 
     // Save the output
-    pgmWriteFile("out.pgm", &output[0], 2*NROWS, 2*NCOLS);
+    pgmWriteFile("out.pgm", output, 2*NCOLS);
 }

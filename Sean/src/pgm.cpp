@@ -6,12 +6,14 @@
 
 
 /* Standard includes */
-#include <stdio.h>   /* FILE  */
-#include <stdlib.h>  /* malloc(), atoi() */
+#include <array>
+#include <fstream>
+#include <cstdio>
+#include <cstdlib>  /* malloc(), atoi() */
 
-/* Our includes */
+#include "height_params.h"
 #include "error.h"
-#define LENGTH 80
+#define BUFSIZE 80
 
 
 /*********************************************************************/
@@ -40,7 +42,7 @@ static void _getNextString(FILE *fp, char *line) {
  */
 
 void pnmReadHeader(FILE *fp, int *magic, int *ncols, int *nrows, int *maxval) {
-    char line[LENGTH];
+    char line[BUFSIZE];
 	
     /* Read magic number */
     _getNextString(fp, line);
@@ -116,8 +118,8 @@ unsigned char* pgmRead(FILE *fp, unsigned char *img, int *ncols, int *nrows) {
  * NOTE:  If img is NULL, memory is allocated.
  */
 
-unsigned char* pgmReadFile(const char *fname, unsigned char *img, int *ncols, int *nrows) {
-    unsigned char *ptr;
+template<size_t N>
+void pgmReadFile(const char *fname, std::array<unsigned char, N> &img) {
     FILE *fp;
 
     /* Open file */
@@ -125,12 +127,10 @@ unsigned char* pgmReadFile(const char *fname, unsigned char *img, int *ncols, in
         error("(pgmReadFile) Can't open file named '%s' for reading\n", fname);
 
     /* Read file */
-    ptr = pgmRead(fp, img, ncols, nrows);
+    pgmRead(fp, &img[0], 500, 500);
 
     /* Close file */
     fclose(fp);
-
-    return ptr;
 }
 
 
@@ -138,19 +138,22 @@ unsigned char* pgmReadFile(const char *fname, unsigned char *img, int *ncols, in
  * pgmWrite
  */
 
-void pgmWrite(FILE *fp, unsigned char *img, int ncols, int nrows) {
+void pgmWrite(std::ofstream &f, unsigned char *img, int ncols, int nrows) {
   int i;
+  char buf[BUFSIZE];
 
   /* Write header */
-  fprintf(fp, "P5\n");
-  fprintf(fp, "%d %d\n", ncols, nrows);
-  fprintf(fp, "255\n");
+  i = sprintf(buf, "%d %d\n", ncols, nrows);
+  f.write("P5\n", 3);
+  f.write(buf, i);
+  f.write("255\n", 4);
 
   /* Write binary data */
-  for (i = 0 ; i < nrows ; i++)  {
-    fwrite(img, ncols, 1, fp);
+  f.write((const char*)img, ncols * ncols);
+  /*for (i = 0 ; i < nrows ; i++)  {
+    f.write((const char*)img, ncols);
     img += ncols;
-  }
+  }*/
 }
 
 
@@ -158,16 +161,19 @@ void pgmWrite(FILE *fp, unsigned char *img, int ncols, int nrows) {
  * pgmWriteFile
  */
 
-void pgmWriteFile(const char *fname, unsigned char *img, int ncols, int nrows) {
-  FILE *fp;
+template<std::size_t N>
+void pgmWriteFile(const char *fname, std::array<unsigned char, N> &img, unsigned int n_cols) {
+    std::ofstream f(fname, std::ios::out | std::ios::binary);
 
-  /* Open file */
-  if ( (fp = fopen(fname, "wb")) == NULL)
-    error("(pgmWriteFile) Can't open file named '%s' for writing\n", fname);
+    if (f.is_open()) {
+        pgmWrite(f, &img[0], n_cols, N / n_cols);
+    } else {
+        error("(pgmWriteFile) Can't open file named '%s' for writing\n", fname);
+    }
 
-  /* Write to file */
-  pgmWrite(fp, img, ncols, nrows);
-
-  /* Close file */
-  fclose(fp);
+    f.close();
 }
+
+template void pgmWriteFile<4*NROWS*NCOLS>(const char *fname,
+                                          std::array<unsigned char, 4*NROWS*NCOLS> &img,
+                                          unsigned int n_cols);
