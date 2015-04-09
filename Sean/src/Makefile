@@ -1,12 +1,13 @@
-CPP = g++
 CXXFLAGS = -std=c++11 -O2 -Wall
 TARGET = gen_preprocessed
 
 ifeq ($(OS),Windows_NT)
+	CPP = g++
 	LIBS = -lopenblas
 	LDFLAGS = -L../../openblas/lib
 	INCLUDES = -I../../openblas/include
 else
+	CPP = clang++
 	LIBS= -lopenblas_threads
 	LDFLAGS =
 	INCLUDES =
