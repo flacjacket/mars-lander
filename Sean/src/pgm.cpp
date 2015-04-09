@@ -1,12 +1,9 @@
 /*********************************************************************
- * pnmio.c
+ * pgm.cpp
  *
- * Various routines to manipulate PNM files.
+ * Various routines to manipulate PGM (i.e. PNM) files
  *********************************************************************/
 
-
-/* Standard includes */
-#include <cstdlib>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -20,7 +17,7 @@
 static std::string _getNextString(std::ifstream &f) {
     std::string output;
     char line[BUFSIZE];
-    std::size_t i;
+    std::size_t ind;
 
     do {
         // Read the next line
@@ -28,15 +25,15 @@ static std::string _getNextString(std::ifstream &f) {
 
         // Find the next newline
         output = std::string(line, BUFSIZE);
-        i = output.find("\n");
+        ind = output.find("\n");
 
-        if (i == std::string::npos) {
+        if (ind == std::string::npos) {
             error("(_getNextString) Unable to find newline");
         }
 
         // Shrink the string down to the right size and move the read
-        output.resize(i);
-        f.seekg(i - BUFSIZE + 1, std::ios_base::cur);
+        output.resize(ind);
+        f.seekg(ind - BUFSIZE + 1, std::ios_base::cur);
     } while (output[0] == '#');
 
     return output;
@@ -52,27 +49,33 @@ int pnmReadHeader(std::ifstream &f, std::size_t N) {
     int maxval, magic;
     unsigned nrows, ncols;
     std::string line;
-	
+
     // Read magic number
     line = _getNextString(f);
     if (line[0] != 'P') {
         error("(pnmReadHeader) Magic number does not begin with 'P', but with a '%c'", line[0]);
     }
-    sscanf(line.c_str(), "P%d", &magic);
-	
-    // Read size, skipping comments
+    magic = std::stoi(line.substr(1, std::string::npos));
+
+    // Read size, for both dimensions
     line = _getNextString(f);
-    sscanf(line.c_str(), "%u %u", &ncols, &nrows);
+    {
+        std::size_t ind = line.find(" ");
+        if (ind == std::string::npos) {
+            error("(pnmReadHeader) Error reading dimension");
+        }
+        ncols = std::stoi(line.substr(0, ind));
+        nrows = std::stoi(line.substr(ind+1, std::string::npos));
+    }
     // Some sanity checks on the dimension
     if (nrows * ncols != N) {
         error("(pnmReadHeader) The dimensions %d x %d do not give size %d", nrows, ncols, N);
     }
-	
+
     // Read maxval, skipping comments
     line = _getNextString(f);
-    maxval = atoi(line.c_str());
-    //fread(line, 1, 1, fp); // Read newline which follows maxval
-	
+    maxval = std::stoi(line);
+
     if (maxval != 255) {
         warning("(pnmReadHeader) Maxval is not 255, but %d", maxval);
     }
@@ -84,7 +87,7 @@ int pnmReadHeader(std::ifstream &f, std::size_t N) {
 /*********************************************************************
  * pgmReadHeader
  */
- 
+
 void pgmReadHeader(std::ifstream &f, std::size_t N) {
     int magic;
 
@@ -98,7 +101,7 @@ void pgmReadHeader(std::ifstream &f, std::size_t N) {
 /*********************************************************************
  * pgmRead
  */
- 
+
 std::vector<unsigned char> pgmRead(std::ifstream &f, unsigned int nrows, unsigned int ncols) {
     std::vector<unsigned char> img(nrows * ncols);
 
@@ -126,7 +129,7 @@ std::vector<unsigned char> pgmReadFile(const char *fname, unsigned int nrows, un
     if (f.is_open()) {
         data = pgmRead(f, nrows, ncols);
     } else {
-        error("(pgmReadFile) Can't open file named '%s' for reading\n", fname);
+        error("(pgmReadFile) Can't open file named '%s' for reading", fname);
     }
 
     // Close file
@@ -141,13 +144,11 @@ std::vector<unsigned char> pgmReadFile(const char *fname, unsigned int nrows, un
 
 
 void pgmWrite(std::ofstream &f, std::vector<unsigned char> &img, unsigned int nrows, unsigned int ncols) {
-    int i;
-    char buf[BUFSIZE];
+    std::string buf = std::to_string(nrows) + " " + std::to_string(ncols) + "\n"; // "%u %u\n", nrows, ncols
 
     // Write header
-    i = sprintf(buf, "%u %u\n", nrows, ncols);
     f.write("P5\n", 3);
-    f.write(buf, i);
+    f.write(buf.c_str(), buf.size());
     f.write("255\n", 4);
 
     // Write binary data
@@ -155,7 +156,7 @@ void pgmWrite(std::ofstream &f, std::vector<unsigned char> &img, unsigned int nr
 
     // Check file status
     if (!f) {
-        error("(pgmWrite) Error writing data\n");
+        error("(pgmWrite) Error writing data");
     }
 }
 
@@ -173,7 +174,7 @@ void pgmWriteFile(const char *fname, std::vector<unsigned char> &img, unsigned i
     if (f.is_open()) {
         pgmWrite(f, img, nrows, ncols);
     } else {
-        error("(pgmWriteFile) Can't open file named '%s' for writing\n", fname);
+        error("(pgmWriteFile) Can't open file named '%s' for writing", fname);
     }
 
     // Close file

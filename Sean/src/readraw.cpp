@@ -5,33 +5,41 @@
 #include "data_params.h"
 #include "error.h"
 
-static void endian_swap(float *longone)
-{
-    struct long_bytes {
-        char byte1;
-        char byte2;
-        char byte3;
-        char byte4;
-    } *longptr;
+/*
+ * swap the endian-ness of the data
+ */
+static inline void endian_swap(float *longone) {
     unsigned char temp;
+    struct long_bytes {
+        unsigned char byte1;
+        unsigned char byte2;
+        unsigned char byte3;
+        unsigned char byte4;
+    } *longptr;
 
     longptr = (struct long_bytes *) longone;
-    temp = longptr->byte1;
-    longptr->byte1 = longptr->byte4;
-    longptr->byte4 = temp;
-    temp = longptr->byte2;
-    longptr->byte2 = longptr->byte3;
-    longptr->byte3 = temp;
+
+#define SWAP(i, j, tmp) tmp = i; i = j; j = tmp
+    SWAP(longptr->byte1, longptr->byte4, temp);
+    SWAP(longptr->byte2, longptr->byte3, temp);
+#undef SWAP
 }
 
+/*
+ * read in the raw data
+ */
 std::vector<float> read_raw(const char *filename, std::vector<float>::size_type size) {
+    // Define the vector to return of the requested size
     std::vector<float> data(size);
 
+    // Open the file
     std::ifstream f(filename, std::ios::in | std::ios::binary);
 
     if (f.is_open()) {
+        // Try to read in all the data
         f.read((char*) &data[0], size * sizeof(float));
 
+        // Error handling
         if (!f) {
             f.close();
             error("Error reading, only %d bytes read", f.gcount());
@@ -40,6 +48,7 @@ std::vector<float> read_raw(const char *filename, std::vector<float>::size_type 
         error("(read_raw) Unable to open - %s", filename);
     }
 
+    // Close file
     f.close();
 
 #if IS_BIGENDIAN

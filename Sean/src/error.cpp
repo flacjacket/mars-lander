@@ -4,9 +4,8 @@
  * Error and warning messages, and system commands.
  *********************************************************************/
 
-#include <cstdarg>
-#include <cstdio>
-#include <cstdlib>
+#include <cstdarg>  // variadic function calls
+#include <cstdlib>  // vsprintf
 #include <iostream>
 
 #define MAXBUF 1024
