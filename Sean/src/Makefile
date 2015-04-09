@@ -1,5 +1,5 @@
 CPP = g++
-CXXFLAGS = -std=c++11 -O3 -Wall
+CXXFLAGS = -std=c++11 -O2 -Wall
 TARGET = gen
 
 ifeq ($(OS),Windows_NT)
