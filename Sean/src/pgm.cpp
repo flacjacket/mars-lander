@@ -49,7 +49,8 @@ static std::string _getNextString(std::ifstream &f) {
 
 
 int pnmReadHeader(std::ifstream &f, std::size_t N) {
-    int maxval, magic , nrows, ncols;
+    int maxval, magic;
+    unsigned nrows, ncols;
     std::string line;
 	
     // Read magic number
@@ -61,11 +62,8 @@ int pnmReadHeader(std::ifstream &f, std::size_t N) {
 	
     // Read size, skipping comments
     line = _getNextString(f);
-    sscanf(line.c_str(), "%d %d", &ncols, &nrows);
+    sscanf(line.c_str(), "%u %u", &ncols, &nrows);
     // Some sanity checks on the dimension
-    if (ncols < 0 || nrows < 0 || ncols > 900000 || nrows >900000) {
-        error("(pnmReadHeader) The dimensions %d x %d are unacceptable", nrows, ncols);
-    }
     if (nrows * ncols != N) {
         error("(pnmReadHeader) The dimensions %d x %d do not give size %d", nrows, ncols, N);
     }

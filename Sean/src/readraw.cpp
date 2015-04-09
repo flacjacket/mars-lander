@@ -44,7 +44,7 @@ std::vector<float> read_raw(const char *filename, std::vector<float>::size_type 
     f.close();
 
 	// data is given in big endian, so we need to swap it to little endian
-    for (int i = 0; i < size; i++) {
+    for (unsigned i = 0; i < size; i++) {
         endian_swap(&data[i]);
     }
     return data;
