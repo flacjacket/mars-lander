@@ -9,11 +9,8 @@
  * used for reading from/writing to files
  */
 
-//template<size_t N>
-//void pgmReadFile(const char *fname, std::array<unsigned char, N> &img);
+std::vector<unsigned char> pgmReadFile(const char *fname, unsigned int nrows, unsigned int ncols);
 
-template<std::size_t N>
-extern void pgmWriteFile(const char *fname, std::array<unsigned char, N> &img, unsigned int n_cols);
-
+void pgmWriteFile(const char *fname, std::vector<unsigned char> &img, unsigned int nrows, unsigned int ncols);
 
 #endif

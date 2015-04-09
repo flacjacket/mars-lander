@@ -1,9 +1,10 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <vector>
 #include <openblas/cblas.h>
 
-#include "height_params.h"
+#include "data_params.h"
 
 #define SPACING 0.2
 
@@ -18,9 +19,11 @@
 #define ZW 19
 
 #define SETOUTPUT(output, i, j) \
-    output[2*i*2*NCOLS + 2*j] = output[2*i*2*NCOLS + 2*j+1] = output[(2*i+1)*2*NCOLS + 2*j] = output[(2*i+1)*2*NCOLS + 2*j+1]
+    output[2*i*NCOLS + 2*j] = output[2*i*NCOLS + 2*j + 1] = output[(2*i + 1)*NCOLS + 2*j] = output[(2*i + 1)*NCOLS + 2*j + 1]
 
-void preprocess_angle(std::array<float, NROWS*NCOLS> &data, std::array<unsigned char, 4 * NROWS*NCOLS>& output) {
+std::vector<unsigned char> preprocess_angle(std::vector<float> &data) {
+    std::vector<unsigned char> output(NROWS*NCOLS);
+
     std::array<float, ZH*ZW> z_top;
     std::array<float, ZH*ZW> z_bot;
 
@@ -28,7 +31,7 @@ void preprocess_angle(std::array<float, NROWS*NCOLS> &data, std::array<unsigned 
     std::vector<int> d_loc;
 
     // Zero the data
-    output.fill(0);
+    std::fill(output.begin(), output.end(), 0);
 
     // pre-compute locations given acceptable distances
     int i = 0;
@@ -46,15 +49,15 @@ void preprocess_angle(std::array<float, NROWS*NCOLS> &data, std::array<unsigned 
         }
     }
 
-    for (int i = 10; i < NROWS - 10; i++) {
-        for (int j = 10; j < NCOLS - 10; j++) {
+    for (int i = 10; i < NROWS_HEIGHT - 10; i++) {
+        for (int j = 10; j < NCOLS_HEIGHT - 10; j++) {
             // build the matrices of heights
             for (int k = 0; k < ZH; k++) {
-                std::reverse_copy(&data[(i-k)*NCOLS + j - ZH+1],
-                                  &data[(i-k)*NCOLS + j + ZH],
+                std::reverse_copy(&data[(i - k)*NCOLS_HEIGHT + j - ZH + 1],
+                                  &data[(i - k)*NCOLS_HEIGHT + j + ZH],
                                   &z_top[k * ZW]);
-                std::copy(&data[(i+k)*NCOLS + j - ZH+1],
-                          &data[(i+k)*NCOLS + j + ZH],
+                std::copy(&data[(i + k)*NCOLS_HEIGHT + j - ZH + 1],
+                          &data[(i + k)*NCOLS_HEIGHT + j + ZH],
                           &z_bot[k * ZW]);
             }
 
@@ -71,4 +74,6 @@ void preprocess_angle(std::array<float, NROWS*NCOLS> &data, std::array<unsigned 
             }
         }
     }
+
+    return output;
 }

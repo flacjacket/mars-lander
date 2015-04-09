@@ -1,7 +1,9 @@
-#include <array>
 #include <fstream>
+#include <iostream>
+#include <iterator>
+#include <vector>
 
-#include "height_params.h"
+#include "data_params.h"
 #include "error.h"
 
 static void endian_swap(float *longone)
@@ -23,22 +25,27 @@ static void endian_swap(float *longone)
     longptr->byte3 = temp;
 }
 
-void read_raw(const char *filename, std::array<float, NROWS*NCOLS> &data) {
-    std::ifstream f (filename, std::ios::in | std::ios::binary);
+std::vector<float> read_raw(const char *filename, std::vector<float>::size_type size) {
+    std::vector<float> data(size);
+
+    std::ifstream f("raw.dem", std::ios::in | std::ios::binary);
 
     if (f.is_open()) {
-        f.read((char*) &data[0], NROWS*NCOLS*sizeof(float));
+        f.read((char*) &data[0], size * sizeof(float));
+
         if (!f) {
             f.close();
             error("Error reading, only %d bytes read", f.gcount());
         }
     } else {
-        error("Missing file - %s", filename);
+        error("(read_raw) Unable to open - %s", filename);
     }
+
     f.close();
 
 	// data is given in big endian, so we need to swap it to little endian
-    for (int i = 0; i < NCOLS*NROWS; i++) {
+    for (int i = 0; i < size; i++) {
         endian_swap(&data[i]);
     }
+    return data;
 }
