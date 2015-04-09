@@ -18,6 +18,5 @@
 *.o
 
 # Some specific things for Sean
-iterate.dat
-/Sean/py_utils/*/*.c
-/Sean/build
+/Sean/src/gen_preprocessed
+/Sean/src/gen_preprocessed.exe
