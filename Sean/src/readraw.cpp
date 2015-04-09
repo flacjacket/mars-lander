@@ -28,7 +28,7 @@ static inline void endian_swap(float *longone) {
 /*
  * read in the raw data
  */
-std::vector<float> read_raw(const char *filename, std::vector<float>::size_type size) {
+std::vector<float> read_raw(const char *filename, std::size_t size) {
     // Define the vector to return of the requested size
     std::vector<float> data(size);
 
