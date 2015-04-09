@@ -1,4 +1,4 @@
-CXXFLAGS = -std=c++11 -O2 -Wall
+CXXFLAGS = -std=c++11 -O2 -Wall -Wextra -pedantic
 TARGET = gen_preprocessed
 
 ifeq ($(OS),Windows_NT)
