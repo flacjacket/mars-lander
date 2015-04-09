@@ -13,6 +13,8 @@
 # Ignore Python bytecompiled files
 *.pyc
 *.so
+# Ignore pickled files
+*.pkl
 
 # Ignore C compiled files
 *.o
