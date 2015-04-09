@@ -1,51 +1,53 @@
-#include <algorithm>
+#include <algorithm> // std::fill, std::reverse_copy
 #include <array>
-#include <cmath>
+#include <cmath>     // atan2, fabs
 #include <vector>
 #include <openblas/cblas.h>
 
 #include "data_params.h"
 
-#define SPACING 0.2
-
+// Use up to 10 deg
 #define ANGLE (10.*3.1415/180.)
 
-#define R_BASE 1.7
-#define R_FOOT 0.25
 #define R_MAX (R_BASE + 0.05)
 #define R_MIN (R_BASE - 2 * R_FOOT - 0.05)
 
 #define ZH 10
 #define ZW 19
 
-#define SETOUTPUT(output, i, j) \
+#define SET_OUTPUT(output, i, j) \
     output[2*i*NCOLS + 2*j] = output[2*i*NCOLS + 2*j + 1] = output[(2*i + 1)*NCOLS + 2*j] = output[(2*i + 1)*NCOLS + 2*j + 1]
 
 std::vector<unsigned char> preprocess_angle(std::vector<float> &data) {
     std::vector<unsigned char> output(NROWS*NCOLS);
+    unsigned char to_output;
 
     std::array<float, ZH*ZW> z_top;
     std::array<float, ZH*ZW> z_bot;
 
-    std::array<float, ZH*ZW> dist;
+    std::vector<float> dist;
     std::vector<int> d_loc;
+
 
     // Zero the data
     std::fill(output.begin(), output.end(), 0);
 
     // pre-compute locations given acceptable distances
-    int i = 0;
-    float d_sq;
-    auto it = dist.begin();
-    for (int r = 0; r < ZH; r++) {
-        for (int c = -(ZH-1); c < ZH; c++) {
-            d_sq = (c * c + r * r) * (SPACING * SPACING);
-            if (d_sq >= R_MIN * R_MIN && d_sq <= R_MAX * R_MAX) {
-                d_loc.push_back(i);
-                *it = sqrt(d_sq);
+    {
+        int i = 0;
+        float d_sq;
+        for (int r = 0; r < ZH; r++) {
+            for (int c = -(ZH-1); c < ZH; c++) {
+                // Compute square distance for the given location
+                d_sq = (c * c + r * r) * (SPACING_HEIGHT * SPACING_HEIGHT);
+                // ... and compare it to the min and max square radii
+                if (d_sq >= R_MIN * R_MIN && d_sq <= R_MAX * R_MAX) {
+                    // If it's acceptible, store the index and the distance
+                    d_loc.push_back(i);
+                    dist.push_back(2 * sqrt(d_sq));
+                }
+                i++;
             }
-            i++;
-            it++;
         }
     }
 
@@ -65,13 +67,16 @@ std::vector<unsigned char> preprocess_angle(std::vector<float> &data) {
             cblas_saxpy(ZH*ZW, -1., &z_top[0], 1, &z_bot[0], 1);
 
             // figure out if any cause it to be false
-            SETOUTPUT(output, i, j) = 0xff;
-            for (auto d_ind = d_loc.begin(); d_ind < d_loc.end(); d_ind++) {
-                if (fabs(atan2(z_bot[*d_ind], 2 * dist[*d_ind])) > ANGLE) {
-                    SETOUTPUT(output, i, j) = 0x00;
+            to_output = 0xff;
+            auto dist_ind = dist.begin();
+            for (auto z_ind = d_loc.begin(); z_ind < d_loc.end(); z_ind++, dist_ind++) {
+                if (fabs(atan2(z_bot[*z_ind], *dist_ind)) > ANGLE) {
+                    to_output = 0x00;
                     break;
                 }
             }
+
+            SET_OUTPUT(output, i, j) = to_output;
         }
     }
 

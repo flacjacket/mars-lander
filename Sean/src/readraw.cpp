@@ -1,5 +1,4 @@
 #include <fstream>
-#include <iostream>
 #include <iterator>
 #include <vector>
 
@@ -43,9 +42,11 @@ std::vector<float> read_raw(const char *filename, std::vector<float>::size_type 
 
     f.close();
 
+#if IS_BIGENDIAN
 	// data is given in big endian, so we need to swap it to little endian
     for (unsigned i = 0; i < size; i++) {
         endian_swap(&data[i]);
     }
     return data;
+#endif
 }
