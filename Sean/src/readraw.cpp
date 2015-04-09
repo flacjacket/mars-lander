@@ -28,7 +28,7 @@ static void endian_swap(float *longone)
 std::vector<float> read_raw(const char *filename, std::vector<float>::size_type size) {
     std::vector<float> data(size);
 
-    std::ifstream f("raw.dem", std::ios::in | std::ios::binary);
+    std::ifstream f(filename, std::ios::in | std::ios::binary);
 
     if (f.is_open()) {
         f.read((char*) &data[0], size * sizeof(float));

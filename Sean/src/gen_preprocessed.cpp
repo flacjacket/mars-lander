@@ -4,6 +4,7 @@
 
 #include "data_params.h"
 
+#include "error.h"
 #include "pgm.h"
 #include "preprocess.h"
 #include "readraw.h"
@@ -16,27 +17,33 @@ void print_tp(std::chrono::system_clock::time_point tp1, std::chrono::system_clo
     std::cout << "Took " << diff.count() << " ms" << std::endl;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     std::vector<float> data;
     std::vector<unsigned char> output, input;
 
     std::chrono::system_clock::time_point tp1, tp2;
 
+    if (argc != 3) {
+        error("Need 2 args, got %d", argc - 1);
+    }
+
     // Get the data
-    std::cout << "Reading data " << std::endl;
-    TIME_IT(tp1, tp2, data = read_raw("raw.dem", NROWS_HEIGHT*NCOLS_HEIGHT));
+    std::cout << "Reading data from " << argv[1] << std::endl;
+    //TIME_IT(tp1, tp2, data = read_raw(argv[0], NROWS_HEIGHT*NCOLS_HEIGHT));
+    data = read_raw(argv[1], NROWS_HEIGHT*NCOLS_HEIGHT);
 
     // Preprocess the data
     std::cout << "Preprocessing data" << std::endl;
     TIME_IT(tp1, tp2, output = preprocess_angle(data));
 
     // Save the output
-    std::cout << "Saving data" << std::endl;
-    TIME_IT(tp1, tp2, pgmWriteFile("out.pgm", output, NROWS, NCOLS));
+    std::cout << "Saving data to " << argv[2] << std::endl;
+    pgmWriteFile(argv[2], output, NROWS, NCOLS);
 
+    /* This block checks the reading of PGM files against the exported PGM
     // Read that output back in
     std::cout << "Re-reading data" << std::endl;
-    TIME_IT(tp1, tp2, input = pgmReadFile("out.pgm", NROWS, NCOLS));
+    input = pgmReadFile("out.pgm", NROWS, NCOLS);
 
     std::cout << "Checking data" << std::endl;
     auto i = input.begin();
@@ -45,4 +52,5 @@ int main() {
             std::cout << "Mis-match!" << std::endl;
         }
     }
+    */
 }

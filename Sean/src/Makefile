@@ -1,6 +1,6 @@
 CPP = g++
 CXXFLAGS = -std=c++11 -O2 -Wall
-TARGET = gen
+TARGET = gen_preprocessed
 
 ifeq ($(OS),Windows_NT)
 	LIBS = -lopenblas
@@ -14,7 +14,7 @@ endif
 
 RM = rm
 
-SRC = error.cpp pgm.cpp readraw.cpp preprocess.cpp main.cpp
+SRC = error.cpp pgm.cpp readraw.cpp preprocess.cpp gen_preprocessed.cpp
 OBJ = $(SRC:.cpp=.o)
 
 all: $(TARGET)
