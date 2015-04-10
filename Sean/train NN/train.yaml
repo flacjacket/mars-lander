@@ -9,17 +9,24 @@
         layers : [
             !obj:pylearn2.models.mlp.RectifiedLinear {
                 layer_name: 'h0',
-                dim: 200,
+                dim: 500,
                 irange: 0.4,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
-                max_col_norm: 1.
+                #max_col_norm: 1.
+            },
+            !obj:pylearn2.models.mlp.RectifiedLinear {
+                layer_name: 'h1',
+                dim: 500,
+                irange: 0.4,
+                # Rather than using weight decay, we constrain the norms of the weight vectors
+                #max_col_norm: 1.
             },
             !obj:pylearn2.models.mlp.Softmax {
                 layer_name: 'y',
                 n_classes: 2,
                 irange: .4,
                 init_bias_target_marginals: *train
-            }
+            },
         ],
         nvis: 1225,
     },
@@ -33,6 +40,18 @@
             init_momentum: 0.5,
         },
 
+        # better to use max_col_norm?
+        cost: !obj:pylearn2.costs.cost.SumOfCosts {
+            costs: [
+                !obj:pylearn2.costs.cost.MethodCost {
+                    method: 'cost_from_X',
+                },
+                !obj:pylearn2.costs.mlp.WeightDecay {
+                    coeffs: [5e-5, 5e-5, 5e-5],
+                },
+            ],
+        },
+
         # We monitor how well we're doing during training on a validation set
         monitoring_dataset: {
             'train' : *train,
@@ -43,9 +62,9 @@
             },
         },
 
-        # We stop after 5 epochs
+        # We stop after 50 epochs
         termination_criterion: !obj:pylearn2.termination_criteria.EpochCounter {
-            max_epochs: 5
+            max_epochs: 50,
         },
     },
 
@@ -55,6 +74,8 @@
              channel_name: 'valid_y_misclass',
              save_path: "nn_train_best.pkl"
         },
+        # http://daemonmaker.blogspot.com/2014/12/monitoring-experiments-in-pylearn2.html
+        !obj:pylearn2.train_extensions.live_monitoring.LiveMonitoring {},
         # Not sure what this does...
         #!obj:pylearn2.training_algorithms.sgd.LinearDecayOverEpoch {
         #    start: 5,
