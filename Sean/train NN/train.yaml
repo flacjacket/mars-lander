@@ -33,12 +33,12 @@
 
     # We train using stochastic gradient descent
     algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {
-        batch_size: 250,
+        batch_size: 1000,
 
         learning_rate: 1e-1,
-        learning_rule: !obj:pylearn2.training_algorithms.learning_rule.Momentum {
-            init_momentum: 0.5,
-        },
+        #learning_rule: !obj:pylearn2.training_algorithms.learning_rule.Momentum {
+        #    init_momentum: 0.5,
+        #},
 
         # better to use max_col_norm?
         cost: !obj:pylearn2.costs.cost.SumOfCosts {
@@ -46,9 +46,9 @@
                 !obj:pylearn2.costs.cost.MethodCost {
                     method: 'cost_from_X',
                 },
-                !obj:pylearn2.costs.mlp.WeightDecay {
-                    coeffs: [5e-5, 5e-5, 5e-5],
-                },
+                #!obj:pylearn2.costs.mlp.WeightDecay {
+                #    coeffs: [5e-5, 5e-5, 5e-5],
+                #},
             ],
         },
 
