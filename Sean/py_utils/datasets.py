@@ -1,10 +1,6 @@
 from __future__ import print_function, division
 
-import numpy as np
 import os
-
-from py_utils.pgm import read_pgm
-from py_utils.raw import read_raw
 
 this_dir = os.path.split(os.path.abspath(__file__))[0]
 jpl_root = os.path.split(os.path.split(this_dir)[0])[0]

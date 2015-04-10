@@ -33,19 +33,20 @@ def check_angle(df_in, r=17, r_foot=2.5, angle=10, buffer=10, smooth=None):
     y = -Y_foot[sel_foot] * spacing
     foot_dist = np.sqrt((2*x)**2 + (2*y)**2)
 
-    for xi in range(buffer, df_in.shape[0]-buffer):
-        for yi in range(buffer, df_in.shape[1]-buffer):
-            Z = df_in[xi-(r+1)//2:xi+(r+3)//2, yi-(r+1)//2:yi+(r+3)//2]
-            dZ_foot = (Z[(r+1)//2::-1, :] - Z[(r+1)//2:, ::-1])[sel_foot]
+    for yi in range(buffer, df_in.shape[0]-buffer):
+        for xi in range(buffer, df_in.shape[1]-buffer):
+            Z = df_in[yi-(r+1)//2:yi+(r+3)//2, xi-(r+1)//2:xi+(r+3)//2]
+            dZ_foot = (Z[(r+1)//2:, :] - Z[(r+1)//2::-1, ::-1])[sel_foot]
 
             if np.all(np.abs(np.arctan2(dZ_foot, foot_dist)) < angle):
-                df_out[xi, yi] = 0xff
+                df_out[yi, xi] = 0xff
 
     if smooth:
         df_out = _smooth(df_out, smooth)
 
     df_out = np.hstack([df_out, df_out])
     df_out = np.vstack([df_out.flatten(), df_out.flatten()]).T.reshape(1000, 1000)
+    df_out[20, :] = df_out[-20, :] = df_out[:, 20] = df_out[:, -20] = 0x00
 
     return df_out
 
