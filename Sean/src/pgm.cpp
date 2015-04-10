@@ -8,6 +8,13 @@
 #include <string>
 #include <vector>
 
+// So Windows C++11 is totally fucked, in that functions like std::stoi and
+// std::to_string don't exist, because of something broken with GLIBCXX ??
+// I tried including the headers like in the SO link below, but couldn't get it
+// working, so I'm punting and using C
+// http://stackoverflow.com/questions/8542221/stdstoi-doesnt-exist-in-g-4-6-1-on-mingw
+#include <cstdlib>
+
 #include "error.h"
 
 #define BUFSIZE 80
@@ -55,7 +62,9 @@ int pnmReadHeader(std::ifstream &f, std::size_t N) {
     if (line[0] != 'P') {
         error("(pnmReadHeader) Magic number does not begin with 'P', but with a '%c'", line[0]);
     }
-    magic = std::stoi(line.substr(1, std::string::npos));
+    // I HATE WINDOWS
+    // magic = std::stoi(line.substr(1, std::string::npos));
+    magic = strtol(line.c_str(), NULL, 10);
 
     // Read size, for both dimensions
     line = _getNextString(f);
@@ -64,8 +73,11 @@ int pnmReadHeader(std::ifstream &f, std::size_t N) {
         if (ind == std::string::npos) {
             error("(pnmReadHeader) Error reading dimension");
         }
-        ncols = std::stoi(line.substr(0, ind));
-        nrows = std::stoi(line.substr(ind+1, std::string::npos));
+        // I HATE WINDOWS
+        // ncols = std::stoi(line.substr(0, ind));
+        // nrows = std::stoi(line.substr(ind+1, std::string::npos));
+        ncols = strtol(line.substr(0, ind).c_str(), NULL, 10);
+        nrows = strtol(line.substr(ind+1, std::string::npos).c_str(), NULL, 10);
     }
     // Some sanity checks on the dimension
     if (nrows * ncols != N) {
@@ -74,7 +86,9 @@ int pnmReadHeader(std::ifstream &f, std::size_t N) {
 
     // Read maxval, skipping comments
     line = _getNextString(f);
-    maxval = std::stoi(line);
+    // I HATE WINDOWS
+    // maxval = std::stoi(line);
+    maxval = strtol(line.c_str(), NULL, 10);
 
     if (maxval != 255) {
         warning("(pnmReadHeader) Maxval is not 255, but %d", maxval);
@@ -144,11 +158,17 @@ std::vector<unsigned char> pgmReadFile(const char *fname, unsigned int nrows, un
 
 
 void pgmWrite(std::ofstream &f, std::vector<unsigned char> &img, unsigned int nrows, unsigned int ncols) {
-    std::string buf = std::to_string(nrows) + " " + std::to_string(ncols) + "\n"; // "%u %u\n", nrows, ncols
+    // "%u %u\n", nrows, ncols
+    // I HATE WINDOWS
+    // std::string buf = std::to_string(nrows) + " " + std::to_string(ncols) + "\n";
+    char buffer [50];
+    int buf_size = sprintf(buffer, "%u %u\n", nrows, ncols);
 
     // Write header
     f.write("P5\n", 3);
-    f.write(buf.c_str(), buf.size());
+    // I HATE WINDOWS
+    // f.write(buf.c_str(), buf.size());
+    f.write(buffer, buf_size);
     f.write("255\n", 4);
 
     // Write binary data
