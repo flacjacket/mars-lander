@@ -5,7 +5,8 @@
  *********************************************************************/
 
 #include <cstdarg>  // variadic function calls
-#include <cstdlib>  // vsprintf
+#include <cstdlib>  // exit
+#include <cstdio>   // vsprintf
 #include <iostream>
 
 #define MAXBUF 1024

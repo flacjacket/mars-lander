@@ -34,7 +34,7 @@
     # We train using batch gradient descent
     algorithm: !obj:pylearn2.training_algorithms.bgd.BGD {
         #learning_rate: 1e-1,
-        batch_size: 500,
+        batch_size: 250,
 
         #learning_rule: !obj:pylearn2.training_algorithms.learning_rule.Momentum {
         #    init_momentum: 0.5,
@@ -46,7 +46,7 @@
                     method: 'cost_from_X'
                 },
                 !obj:pylearn2.costs.mlp.WeightDecay {
-                    coeffs: [5e-5, 5e-5, 5e-5]
+                    coeffs: [5e-4, 5e-4, 5e-4]
                 }
             ]
         },
@@ -63,10 +63,10 @@
 
         # We stop after 5 epochs
         termination_criterion: !obj:pylearn2.termination_criteria.EpochCounter {
-            max_epochs: 100
+            max_epochs: 40
         },
     },
-    save_freq : 60
+    save_freq : 10
     # We save the model whenever we improve on the validation set classification error
     #extensions: [
     #    !obj:pylearn2.train_extensions.best_params.MonitorBasedSaveBest {
