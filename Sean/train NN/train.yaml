@@ -10,21 +10,21 @@
             !obj:pylearn2.models.mlp.RectifiedLinear {
                 layer_name: 'h0',
                 dim: 500,
-                irange: 0.4,
+                sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
                 #max_col_norm: 1.
             },
             !obj:pylearn2.models.mlp.RectifiedLinear {
                 layer_name: 'h1',
                 dim: 500,
-                irange: 0.4,
+                sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
                 #max_col_norm: 1.
             },
             !obj:pylearn2.models.mlp.Softmax {
                 layer_name: 'y',
                 n_classes: 2,
-                irange: .4,
+                irange: 0,
                 init_bias_target_marginals: *train
             },
         ],
@@ -64,7 +64,7 @@
 
         # We stop after 50 epochs
         termination_criterion: !obj:pylearn2.termination_criteria.EpochCounter {
-            max_epochs: 50,
+            max_epochs: 100,
         },
     },
 

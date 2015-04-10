@@ -14,8 +14,8 @@ from py_utils.pgm import read_pgm
 
 
 n_samples = (INPUT_SHAPE - 2 * BUFFER)**2
-n_train = (INPUT_SHAPE - 2 * BUFFER) * 400
-n_test = (INPUT_SHAPE - 2 * BUFFER) * 200
+n_train = (INPUT_SHAPE - 2 * BUFFER) * 600
+n_test = n_samples - n_train
 
 n_features = (2 * R + 1)**2
 
