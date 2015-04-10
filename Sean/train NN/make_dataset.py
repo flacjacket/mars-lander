@@ -26,10 +26,14 @@ y = np.zeros((n_train, 1), dtype=int)
 y_test = np.zeros((n_test, 1), dtype=int)
 
 data = read_pgm(data_image[1])
-labels = read_pgm(data_image[1])
+labels = read_pgm(data_labels[1])
 
 norm_data = np.zeros_like(data, dtype=np.float16)
 norm_data[:] = data / 255
+
+
+print("Training on {} samples ({:.1%})".format(n_train, n_train / n_samples))
+print("Testing on {} samples ({:.1%})".format(n_test, n_test / n_samples))
 
 
 def get_data(n):
@@ -41,7 +45,7 @@ def get_data(n):
 def get_label(n):
     i = n // (INPUT_SHAPE - 2 * BUFFER)
     j = n % (INPUT_SHAPE - 2 * BUFFER)
-    return int(labels[BUFFER+i, BUFFER+j] == 0xff)
+    return labels[BUFFER+i, BUFFER+j] == 0xff
 
 
 for i in range(n_train):
@@ -51,6 +55,8 @@ for i in range(n_train):
 for i in range(n_test):
     X_test[i, :] = get_data(i + n_train).flatten()
     y_test[i, 0] = get_label(i + n_train)
+
+print("With {:.1%} safe training examples and {:.1%} safe test examples".format(np.sum(y) / n_train, np.sum(y_test) / n_test))
 
 
 serial.save("X_train.pkl", X)
