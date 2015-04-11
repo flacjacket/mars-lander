@@ -36,6 +36,10 @@ int main(int argc, char* argv[]) {
     std::cout << "Preprocessing data" << std::endl;
     TIME_IT(tp1, tp2, output = preprocess_angle(data));
 
+    // Fix up the edges
+    std::cout << "Fixing the edges" << std::endl;
+    TIME_IT(tp1, tp2, fix_edges(output));
+
     // Save the output
     std::cout << "Saving data to " << argv[2] << std::endl;
     pgmWriteFile(argv[2], output, NROWS, NCOLS);

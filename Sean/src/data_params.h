@@ -1,6 +1,9 @@
 #ifndef _DATA_PARAMS_H
 #define _DATA_PARAMS_H
 
+// The buffer width on the final output data set
+#define BUFFER 20 // actually 21, but for C indexing, say 20
+
 // Radii of the base and the foot
 #define R_BASE 1.7
 #define R_FOOT 0.25

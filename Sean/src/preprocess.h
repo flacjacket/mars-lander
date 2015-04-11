@@ -7,4 +7,6 @@
 
 std::vector<unsigned char> preprocess_angle(std::vector<float> &data);
 
+void fix_edges(std::vector<unsigned char> &output);
+
 #endif // _PREPROCESS_H

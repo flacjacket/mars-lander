@@ -18,6 +18,34 @@
 #define SET_OUTPUT(output, i, j) \
     output[2*i*NCOLS + 2*j] = output[2*i*NCOLS + 2*j + 1] = output[(2*i + 1)*NCOLS + 2*j] = output[(2*i + 1)*NCOLS + 2*j + 1]
 
+
+/*
+ * Get the footpad locations to consider in the height data for a given window
+ *
+ * Pass in the inner and outer radii, and the vectors to populate with the
+ * distances between the points and the indices that they reside in.
+ */
+static void footpad_dist_2point(double r_min, double r_max,
+                                std::vector<float> &dist, std::vector<int> &d_loc) {
+    int i = 0;
+    float d_sq;
+
+    for (int r = 0; r < ZH; r++) {
+        for (int c = -(ZH-1); c < ZH; c++) {
+            // Compute square distance for the given location
+            d_sq = (c * c + r * r) * (SPACING_HEIGHT * SPACING_HEIGHT);
+            // ... and compare it to the min and max square radii
+            if (d_sq >= r_min * r_min && d_sq <= r_max * r_max) {
+                // If it's acceptible, store the index and the distance
+                d_loc.push_back(i);
+                dist.push_back(2 * sqrt(d_sq));
+            }
+            i++;
+        }
+    }
+}
+
+
 std::vector<unsigned char> preprocess_angle(std::vector<float> &data) {
     std::vector<unsigned char> output(NROWS*NCOLS);
     unsigned char to_output;
@@ -33,26 +61,10 @@ std::vector<unsigned char> preprocess_angle(std::vector<float> &data) {
     std::fill(output.begin(), output.end(), 0);
 
     // pre-compute locations given acceptable distances
-    {
-        int i = 0;
-        float d_sq;
-        for (int r = 0; r < ZH; r++) {
-            for (int c = -(ZH-1); c < ZH; c++) {
-                // Compute square distance for the given location
-                d_sq = (c * c + r * r) * (SPACING_HEIGHT * SPACING_HEIGHT);
-                // ... and compare it to the min and max square radii
-                if (d_sq >= R_MIN * R_MIN && d_sq <= R_MAX * R_MAX) {
-                    // If it's acceptible, store the index and the distance
-                    d_loc.push_back(i);
-                    dist.push_back(2 * sqrt(d_sq));
-                }
-                i++;
-            }
-        }
-    }
+    footpad_dist_2point(R_MIN, R_MAX, dist, d_loc);
 
-    for (int i = 10; i < NROWS_HEIGHT - 10; i++) {
-        for (int j = 10; j < NCOLS_HEIGHT - 10; j++) {
+    for (int i = BUFFER/2; i < NROWS_HEIGHT - BUFFER/2; i++) {
+        for (int j = BUFFER/2; j < NCOLS_HEIGHT - BUFFER/2; j++) {
             // build the matrices of heights
             for (int k = 0; k < ZH; k++) {
                 std::reverse_copy(&data[(i - k)*NCOLS_HEIGHT + j - ZH + 1],
@@ -81,4 +93,17 @@ std::vector<unsigned char> preprocess_angle(std::vector<float> &data) {
     }
 
     return output;
+}
+
+
+/*
+ * Fixes the edges so it matches the data sets we are given
+ */
+void fix_edges(std::vector<unsigned char> &output) {
+    for (int i = BUFFER; i < NROWS - BUFFER; i++) {
+        output[BUFFER*NCOLS + i] =                         // Top row
+            output[i*NCOLS + BUFFER] =                     // left column
+            output[i*NCOLS + NROWS - BUFFER - 1] =         // right column
+            output[(NROWS - BUFFER - 1)*NCOLS + i] = 0x00; // Bottom row
+    }
 }
