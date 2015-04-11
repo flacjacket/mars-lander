@@ -14,12 +14,12 @@ else
 	EXECUTABLES = $(TARGETS)
 endif
 
-SRC = error.cpp pgm.cpp readraw.cpp preprocess.cpp
+SRC = error.cpp pgm.cpp readraw.cpp preprocess_common.cpp
 OBJ = $(SRC:.cpp=.o)
 
 all: $(TARGETS)
 
-gen_%: gen_%.o $(OBJ)
+gen_%: gen_%.o preprocess_%.o $(OBJ)
 	$(CPP) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 gen_%.o: gen_%.cpp
@@ -32,4 +32,4 @@ gen_%.o: gen_%.cpp
 
 .PHONY: clean
 clean:
-	-rm $(OBJ) $(TARGETS:%=%.o) $(EXECUTABLES)
+	-rm $(OBJ) $(TARGETS:%=%.o) preprocess_easy.o preprocess_full.o $(EXECUTABLES)

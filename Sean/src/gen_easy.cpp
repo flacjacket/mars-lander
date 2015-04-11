@@ -6,7 +6,7 @@
 
 #include "error.h"
 #include "pgm.h"
-#include "preprocess.h"
+#include "preprocess_easy.h"
 #include "readraw.h"
 
 #define TIME_IT(tp1, tp2, call) \
