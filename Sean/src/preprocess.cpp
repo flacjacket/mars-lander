@@ -6,14 +6,18 @@
 
 #include "data_params.h"
 
-// Use up to 10 deg
-#define ANGLE (10.*3.1415/180.)
+// Use 10 deg as high safe cutoff
+#define ANGLE_SAFE (10.*3.1415/180.)
+// Use 12 deg as low unsafe cutoff
+#define ANGLE_UNSAFE (13.*3.1415/180.)
 
 #define R_MAX (R_BASE + 0.05)
 #define R_MIN (R_BASE - 2 * R_FOOT - 0.05)
 
 #define ZH 10
 #define ZW 19
+
+#define COS_ATAN(x) (1. / sqrt((x) * (x) + 1))
 
 #define SET_OUTPUT(output, i, j) \
     output[2*i*NCOLS + 2*j] = output[2*i*NCOLS + 2*j + 1] = output[(2*i + 1)*NCOLS + 2*j] = output[(2*i + 1)*NCOLS + 2*j + 1]
@@ -79,6 +83,7 @@ static void footpad_dist_4point(double r_min, double r_max,
 
 std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
     std::vector<unsigned char> output(NROWS*NCOLS);
+    unsigned char to_output;
 
     std::array<float, ZH*(ZH-1)> z_nw;
     std::array<float, ZH*(ZH-1)> z_ne;
@@ -89,15 +94,22 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
     std::vector<float> dist_short;
     std::vector<int> d_loc;
 
+    double cos_theta, cos_phi1, cos_phi2;
+    float z1, z2, dz1, dz2;
+
     // Zero the data
     std::fill(output.begin(), output.end(), 0);
 
     // pre-compute locations given acceptable distances
-    footpad_dist_4point(R_MIN, R_MAX, dist_long, dist_short, d_loc);
+    // Distances to guarantee unsafe
+    footpad_dist_4point(R_BASE - 2 * R_FOOT, R_BASE, dist_long, dist_short, d_loc);
+    // Distances to guarantee safe
+    // TODO
 
     for (int i = BUFFER/2; i < NROWS_HEIGHT - BUFFER/2; i++) {
         for (int j = BUFFER/2; j < NCOLS_HEIGHT - BUFFER/2; j++) {
             // build the matrices of heights
+            // TODO: This can be improved by re-using data
             for (int k = 0; k < ZH; k++) {
                 std::reverse_copy(&data[(i - k)*NCOLS_HEIGHT + j - ZH + 1],
                                   &data[(i - k)*NCOLS_HEIGHT + j],
@@ -120,22 +132,42 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
             cblas_saxpy(ZH*(ZH - 1), -1., &z_ne[0], 1, &z_sw[0], 1);
 
             // figure out if any cause it to be unsafe
-            auto dist_long_ind = dist_long.begin();
-            for (auto z_ind = d_loc.begin(); z_ind < d_loc.end(); z_ind++, dist_long_ind++) {
-                if (fabs(atan2(z_se[*z_ind], *dist_long_ind)) > ANGLE) {
-                    goto is_unsafe;
+            to_output = 0xff;
+            //auto dist_long_ind = dist_long.begin();
+            //auto dist_short_ind = dist_short.begin();
+            for (auto z_ind = d_loc.begin(); z_ind < d_loc.end(); z_ind++/*, dist_long_ind++, dist_short_ind++*/) {
+                /*
+                 * Find guaranteed unsafe
+                 * Need to use full diameter to guaratee is unsafe
+                 */
+                // Determine tilting configuration
+                z1 = z_nw[*z_ind];
+                dz1 = z_se[*z_ind];
+                z2 = z_ne[*z_ind];
+                dz2 = z_sw[*z_ind];
+                if (z1 + dz1 / 2 > z2 + dz2 / 2) {
+                    // Primary landing feet NW/SE
+                    //cos_theta = cos(atan2(dz1, 2 * R_BASE));
+                    cos_theta = COS_ATAN(dz1 / (2 * R_BASE));
+                    // Midpoint of primary to either secondary
+                    cos_phi1 = COS_ATAN((z2 - (z1 + dz1 / 2)) / R_BASE);
+                    cos_phi2 = COS_ATAN((z2 + dz2 - (z1 + dz1 / 2)) / R_BASE);
+                } else {
+                    // Primary landing feet NE/SW
+                    cos_theta = COS_ATAN(dz2 / (2 * R_BASE));
+                    // Midpoint of primary to either secondary
+                    cos_phi1 = COS_ATAN((z1 - (z2 + dz2 / 2)) / R_BASE);
+                    cos_phi2 = COS_ATAN((z1 + dz1 - (z2 + dz2 / 2)) / R_BASE);
                 }
 
-                if (fabs(atan2(z_sw[*z_ind], *dist_long_ind)) > ANGLE) {
-                    goto is_unsafe;
+                // Check tilting each direction
+                if (fabs(acos(cos_theta * cos_phi1)) > ANGLE_UNSAFE || fabs(acos(cos_theta * cos_phi2)) > ANGLE_UNSAFE) {
+                    to_output = 0x00;
+                    break;
                 }
             }
 
-            SET_OUTPUT(output, i, j) = 0xff;
-            continue;
-
-is_unsafe:
-            SET_OUTPUT(output, i, j) = 0x00;
+            SET_OUTPUT(output, i, j) = to_output;
             continue;
         }
     }
@@ -179,7 +211,7 @@ std::vector<unsigned char> preprocess_angle(std::vector<float> &data) {
             to_output = 0xff;
             auto dist_ind = dist.begin();
             for (auto z_ind = d_loc.begin(); z_ind < d_loc.end(); z_ind++, dist_ind++) {
-                if (fabs(atan2(z_bot[*z_ind], *dist_ind)) > ANGLE) {
+                if (fabs(atan2(z_bot[*z_ind], *dist_ind)) > ANGLE_SAFE) {
                     to_output = 0x00;
                     break;
                 }

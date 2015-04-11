@@ -1,32 +1,35 @@
 CXXFLAGS = -std=c++11 -O2 -Wall -Wextra -pedantic
+TARGETS = gen_simple gen_full
 ifeq ($(OS),Windows_NT)
 	CPP = g++
 	LIBS = -lopenblas
 	LDFLAGS = -L../../openblas/lib
 	INCLUDES = -I../../openblas/include
+	EXECUTABLES = $(TARGETS:%=%.exe)
 else
 	CPP = clang++
 	LIBS= -lopenblas_threads
 	LDFLAGS =
 	INCLUDES =
+	EXECUTABLES = $(TARGETS)
 endif
-
-RM = rm
 
 SRC = error.cpp pgm.cpp readraw.cpp preprocess.cpp
 OBJ = $(SRC:.cpp=.o)
 
-all: gen_easy
+all: $(TARGETS)
 
-gen_simple: gen_simple.o $(OBJ)
-	$(CPP) $(CXXFLAGS) -o gen_simple gen_simple.o $(OBJ) $(LDFLAGS) $(LIBS)
+gen_%: gen_%.o $(OBJ)
+	$(CPP) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
-gen_easy: gen_easy.o $(OBJ)
-	$(CPP) $(CXXFLAGS) -o gen_easy gen_easy.o $(OBJ) $(LDFLAGS) $(LIBS)
-
-.cpp.o:
+gen_%.o: gen_%.cpp
 	$(CPP) $(CXXFLAGS) -c $< -o $@ $(INCLUDES)
+
+%.o: %.cpp %.h
+	$(CPP) $(CXXFLAGS) -c $< -o $@ $(INCLUDES)
+
+.SECONDARY: $(OBJS)
 
 .PHONY: clean
 clean:
-	$(RM) $(OBJ) *.exe
+	-rm $(OBJ) $(EXECUTABLES)
