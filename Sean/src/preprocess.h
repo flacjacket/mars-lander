@@ -6,7 +6,8 @@
 #define _PREPROCESS_H
 
 std::vector<unsigned char> preprocess_angle(std::vector<float> &data);
+std::vector<unsigned char> preprocess_full(std::vector<float> &data);
 
-void fix_edges(std::vector<unsigned char> &output);
+void preprocess_fix_edges(std::vector<unsigned char> &output);
 
 #endif // _PREPROCESS_H

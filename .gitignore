@@ -18,7 +18,8 @@
 
 # Ignore C compiled files
 *.o
+*.exe
 
 # Some specific things for Sean
-/Sean/src/gen_preprocessed
-/Sean/src/gen_preprocessed.exe
+/Sean/src/gen_*
+!/Sean/src/gen_*.cpp
