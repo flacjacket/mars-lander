@@ -1,5 +1,5 @@
 CXXFLAGS = -std=c++11 -O2 -Wall -Wextra -pedantic
-TARGETS = gen_simple gen_full
+TARGETS = gen_easy gen_full
 ifeq ($(OS),Windows_NT)
 	CPP = g++
 	LIBS = -lopenblas
@@ -32,4 +32,4 @@ gen_%.o: gen_%.cpp
 
 .PHONY: clean
 clean:
-	-rm $(OBJ) $(EXECUTABLES)
+	-rm $(OBJ) $(TARGETS:%=%.o) $(EXECUTABLES)

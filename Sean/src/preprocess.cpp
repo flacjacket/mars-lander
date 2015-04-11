@@ -11,11 +11,13 @@
 // Use 12 deg as low unsafe cutoff
 #define ANGLE_UNSAFE (13.*3.1415/180.)
 
-#define R_MAX (R_BASE + 0.05)
-#define R_MIN (R_BASE - 2 * R_FOOT - 0.05)
+// Use 0.29 m as high safe cutoff
+#define HEIGHT_SAFE (HEIGHT_UNSAFE - 0.1)
+// Use 0.39 m as low unsafe cutoff
+#define HEIGHT_UNSAFE 0.39
 
-#define ZH 10
-#define ZW 19
+#define ZH 11
+#define ZW 21
 
 #define COS_ATAN(x) (1. / sqrt((x) * (x) + 1))
 
@@ -24,43 +26,35 @@
 
 
 /*
- * Get the footpad locations to consider in the height data for a given window
- *
- * Pass in the inner and outer radii, and the vectors to populate with the
- * distances between the points and the indices that they reside in.
+ * Get the base locations to consider in the height data for a given window
  */
-static void footpad_dist_2point(double r_min, double r_max,
-                                std::vector<float> &dist, std::vector<int> &d_loc) {
-    int i = 0;
-    float d_sq;
+static inline void base_loc(double r_min, double r_max, std::vector<int> &d_loc) {
+    double d_sq;
+    int ind = 0;
 
-    for (int r = 0; r < ZH; r++) {
-        for (int c = -(ZH-1); c < ZH; c++) {
-            // Compute square distance for the given location
+    for (int r = 1 - ZH; r < ZH; r++) {
+        for (int c = 1 - ZH; c < ZH; c++) {
+            // Compute square distance for the given location and compare it to the min and max square radii
             d_sq = (c * c + r * r) * (SPACING_HEIGHT * SPACING_HEIGHT);
-            // ... and compare it to the min and max square radii
-            if (d_sq >= r_min * r_min && d_sq <= r_max * r_max) {
-                // If it's acceptible, store the index and the distance
-                d_loc.push_back(i);
-                dist.push_back(2 * sqrt(d_sq));
+            if (d_sq >= r_min * r_min && d_sq < r_max * r_max) {
+                // If it's acceptible, store the index
+                d_loc.push_back(ind);
             }
-            i++;
+            ind++;
         }
     }
 }
 
-
 /*
  * Get the footpad locations to consider in the height data for a given window
  *
- * Just like above, but gives the distance both diametrically opposite, and to a
- * right angle to the point.
+ * Also gives the distance both diametrically opposite, and 90 deg rotated from the point
  */
-static void footpad_dist_4point(double r_min, double r_max,
+static inline void footpad_dist_4point(double r_min, double r_max,
                                 std::vector<float> &dist_long, std::vector<float> &dist_short,
                                 std::vector<int> &d_loc) {
+    double d_sq;
     int ind = 0;
-    float d_sq;
 
     for (int r = 0; r < ZH; r++) {
         for (int c = 1; c < ZH; c++) {
@@ -78,8 +72,6 @@ static void footpad_dist_4point(double r_min, double r_max,
     }
 }
 
-
-#include <iostream>
 
 std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
     std::vector<unsigned char> output(NROWS*NCOLS);
@@ -176,48 +168,75 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
 }
 
 
-std::vector<unsigned char> preprocess_angle(std::vector<float> &data) {
+std::vector<unsigned char> preprocess_easy(std::vector<float> &data) {
     std::vector<unsigned char> output(NROWS*NCOLS);
-    unsigned char to_output;
+    std::vector<int> d_loc_unsafe, d_loc_safe;
 
-    std::array<float, ZH*ZW> z_top;
-    std::array<float, ZH*ZW> z_bot;
-
-    std::vector<float> dist;
-    std::vector<int> d_loc;
+    std::array<float, ZW*ZW> z;
+    float cur_z, min_z, max_z;
 
     // Zero the data
     std::fill(output.begin(), output.end(), 0);
 
-    // pre-compute locations given acceptable distances
-    footpad_dist_2point(R_MIN, R_MAX, dist, d_loc);
+    // Get all of the base locations
+    // Check known unsafe
+    base_loc(0, R_BASE, d_loc_unsafe);
+    // Check known safe
+    base_loc(R_BASE, R_BASE + 2 * SPACING_HEIGHT, d_loc_safe);
 
     for (int i = BUFFER/2; i < NROWS_HEIGHT - BUFFER/2; i++) {
         for (int j = BUFFER/2; j < NCOLS_HEIGHT - BUFFER/2; j++) {
             // build the matrices of heights
-            for (int k = 0; k < ZH; k++) {
-                std::reverse_copy(&data[(i - k)*NCOLS_HEIGHT + j - ZH + 1],
-                                  &data[(i - k)*NCOLS_HEIGHT + j + ZH],
-                                  &z_top[k * ZW]);
-                std::copy(&data[(i + k)*NCOLS_HEIGHT + j - ZH + 1],
-                          &data[(i + k)*NCOLS_HEIGHT + j + ZH],
-                          &z_bot[k * ZW]);
+            // TODO: This can be improved by re-using data
+            for (int k = 1 - ZH; k < ZH; k++) {
+                std::copy(&data[(i + k)*NCOLS_HEIGHT + j + 1 - ZH],
+                    &data[(i + k)*NCOLS_HEIGHT + j + ZH],
+                    &z[(k + ZH - 1) * ZW]);
             }
 
-            // z_bot = -1 * z_top + z_bot
-            cblas_saxpy(ZH*ZW, -1., &z_top[0], 1, &z_bot[0], 1);
-
-            // figure out if any cause it to be false
-            to_output = 0xff;
-            auto dist_ind = dist.begin();
-            for (auto z_ind = d_loc.begin(); z_ind < d_loc.end(); z_ind++, dist_ind++) {
-                if (fabs(atan2(z_bot[*z_ind], *dist_ind)) > ANGLE_SAFE) {
-                    to_output = 0x00;
-                    break;
+            // find min and max heights
+            min_z = max_z = z[d_loc_unsafe[0]];
+            for (auto ind = d_loc_unsafe.begin(); ind < d_loc_unsafe.end(); ind++) {
+                cur_z = z[*ind];
+                if (cur_z < min_z) {
+                    min_z = cur_z;
+                }
+                if (cur_z > max_z) {
+                    max_z = cur_z;
                 }
             }
 
-            SET_OUTPUT(output, i, j) = to_output;
+            // Here we can say if KNOWN UNSAFE
+            if (max_z - min_z > HEIGHT_UNSAFE) {
+                goto is_unsafe;
+            }
+
+            for (auto ind = d_loc_safe.begin(); ind < d_loc_safe.end(); ind++) {
+                cur_z = z[*ind];
+                if (cur_z < min_z) {
+                    min_z = cur_z;
+                }
+                if (cur_z > max_z) {
+                    max_z = cur_z;
+                }
+            }
+
+            // Here we can say if KNOWN UNSAFE
+            if (max_z - min_z < HEIGHT_SAFE) {
+                goto is_safe;
+            }
+
+            // Otherwise we have to punt
+            SET_OUTPUT(output, i, j) = 0xff / 2;
+            continue;
+
+is_safe:
+            SET_OUTPUT(output, i, j) = 0xff;
+            continue;
+
+is_unsafe:
+            // SET_OUTPUT(output, i, j) = 0x00;
+            continue;
         }
     }
 

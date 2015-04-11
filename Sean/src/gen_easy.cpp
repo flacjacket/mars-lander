@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 
     // Preprocess the data
     std::cout << "Preprocessing data" << std::endl;
-    TIME_IT(tp1, tp2, output = preprocess_angle(data));
+    TIME_IT(tp1, tp2, output = preprocess_easy(data));
 
     // Fix up the edges
     std::cout << "Fixing the edges" << std::endl;
