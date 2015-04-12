@@ -17,8 +17,8 @@
 
 namespace nn {
     void from_pgm_labeled(std::vector<unsigned char> &selection, std::vector<unsigned char> &solution, std::vector<unsigned char> &image,
-                          std::vector<unsigned char> &output_safe, std::vector<unsigned char> &output_unsafe);
-    void write_file(const char *fname, std::vector<unsigned char> &output_safe, std::vector<unsigned char> &output_unsafe);
+                          std::vector<float> &output_safe, std::vector<float> &output_unsafe);
+    void write_file(const char *fname, std::vector<float> &output_safe, std::vector<float> &output_unsafe);
 }
 
 #endif

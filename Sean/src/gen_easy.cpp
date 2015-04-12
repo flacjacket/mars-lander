@@ -25,7 +25,8 @@ void print_tp(std::chrono::system_clock::time_point tp1, std::chrono::system_clo
 int main(int argc, char* argv[]) {
     std::vector<float> input_height;
     std::vector<unsigned char> input_image, input_solution;
-    std::vector<unsigned char> output_pgm, output_nn_safe, output_nn_unsafe;
+    std::vector<unsigned char> output_pgm;
+    std::vector<float> output_nn_safe, output_nn_unsafe;
 
     std::chrono::system_clock::time_point tp1, tp2;
 

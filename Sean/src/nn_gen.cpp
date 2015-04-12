@@ -14,11 +14,13 @@
 #include "error.h"
 #include "preprocess_common.h"
 
+#define NORMALIZE(x) ((float) ((x) - 159) / 255.)
+
 /*
  * Take NROWS x NCOLS selection and an NROWS x NCOLS image and generate the corresponding NN input
  */
 void nn::from_pgm_labeled(std::vector<unsigned char> &selection, std::vector<unsigned char> &solution, std::vector<unsigned char> &image,
-                          std::vector<unsigned char> &output_safe, std::vector<unsigned char> &output_unsafe) {
+                          std::vector<float> &output_safe, std::vector<float> &output_unsafe) {
     std::vector<int> ind_safe, ind_unsafe;
     std::size_t n_safe = 0, n_unsafe = 0;
 
@@ -47,7 +49,7 @@ void nn::from_pgm_labeled(std::vector<unsigned char> &selection, std::vector<uns
         loc = *i;
         for (int r = -NN_WINDOW / 2; r <= NN_WINDOW / 2; r++) {
             for (int c = -NN_WINDOW / 2; c <= NN_WINDOW / 2; c++) {
-                output_safe.push_back(image[loc + r*NROWS + c]);
+                output_safe.push_back(NORMALIZE(image[loc + r*NROWS + c]));
             }
         }
     }
@@ -56,14 +58,14 @@ void nn::from_pgm_labeled(std::vector<unsigned char> &selection, std::vector<uns
         loc = *i;
         for (int r = -NN_WINDOW / 2; r <= NN_WINDOW / 2; r++) {
             for (int c = -NN_WINDOW / 2; c <= NN_WINDOW / 2; c++) {
-                output_unsafe.push_back(image[loc + r*NROWS + c]);
+                output_unsafe.push_back(NORMALIZE(image[loc + r*NROWS + c]));
             }
         }
     }
 }
 
 
-void nn::write_file(const char *fname, std::vector<unsigned char> &output_safe, std::vector<unsigned char> &output_unsafe) {
+void nn::write_file(const char *fname, std::vector<float> &output_safe, std::vector<float> &output_unsafe) {
     std::ofstream f;
     std::string safe_name, unsafe_name;
 
@@ -78,7 +80,7 @@ void nn::write_file(const char *fname, std::vector<unsigned char> &output_safe, 
     f.open(safe_name.c_str(), std::ios::out | std::ios::binary);
     // Write file
     if (f.is_open()) {
-        f.write((const char*)&output_safe[0], output_safe.size());
+        f.write((const char*)&output_safe[0], output_safe.size() * sizeof(float));
     } else {
         error("(nn::write_file) Can't open file named '%s' for writing safe file", safe_name.c_str());
     }
@@ -97,7 +99,7 @@ void nn::write_file(const char *fname, std::vector<unsigned char> &output_safe, 
     f.open(unsafe_name.c_str(), std::ios::out | std::ios::binary);
     // Write file
     if (f.is_open()) {
-        f.write((const char*)&output_unsafe[0], output_unsafe.size());
+        f.write((const char*)&output_unsafe[0], output_unsafe.size() * sizeof(float));
     } else {
         error("(nn::write_file) Can't open file named '%s' for writing unsafe file", unsafe_name.c_str());
     }
