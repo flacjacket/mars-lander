@@ -31,26 +31,26 @@
         nvis: 1225,
     },
 
-    # We train using stochastic gradient descent
-    algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {
+    # We train using batch gradient descent
+    algorithm: !obj:pylearn2.training_algorithms.bgd.BGD {
         batch_size: 1000,
 
-        learning_rate: 1e-1,
+        #learning_rate: 1e-1,
         #learning_rule: !obj:pylearn2.training_algorithms.learning_rule.Momentum {
         #    init_momentum: 0.5,
         #},
 
         # better to use max_col_norm?
-        cost: !obj:pylearn2.costs.cost.SumOfCosts {
-            costs: [
-                !obj:pylearn2.costs.cost.MethodCost {
-                    method: 'cost_from_X',
-                },
-                #!obj:pylearn2.costs.mlp.WeightDecay {
-                #    coeffs: [5e-5, 5e-5, 5e-5],
-                #},
-            ],
-        },
+        #cost: !obj:pylearn2.costs.cost.SumOfCosts {
+        #    costs: [
+        #        !obj:pylearn2.costs.cost.MethodCost {
+        #            method: 'cost_from_X',
+        #        },
+        #        #!obj:pylearn2.costs.mlp.WeightDecay {
+        #        #    coeffs: [5e-5, 5e-5, 5e-5],
+        #        #},
+        #    ],
+        #},
 
         # We monitor how well we're doing during training on a validation set
         monitoring_dataset: {
@@ -64,7 +64,7 @@
 
         # We stop after 50 epochs
         termination_criterion: !obj:pylearn2.termination_criteria.EpochCounter {
-            max_epochs: 100,
+            max_epochs: 1000,
         },
     },
 
