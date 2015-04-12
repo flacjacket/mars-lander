@@ -15,13 +15,14 @@
 // http://stackoverflow.com/questions/8542221/stdstoi-doesnt-exist-in-g-4-6-1-on-mingw
 #include <cstdlib>
 
+#include "pgm.h"
 #include "error.h"
 
 #define BUFSIZE 80
 
 /*********************************************************************/
 
-static std::string _getNextString(std::ifstream &f) {
+static std::string get_next_string(std::ifstream &f) {
     std::string output;
     char line[BUFSIZE];
     std::size_t ind;
@@ -52,13 +53,13 @@ static std::string _getNextString(std::ifstream &f) {
  */
 
 
-int pnmReadHeader(std::ifstream &f, std::size_t N) {
+int pgm::pnm_read_header(std::ifstream &f, std::size_t N) {
     int maxval, magic;
     unsigned nrows, ncols;
     std::string line;
 
     // Read magic number
-    line = _getNextString(f);
+    line = get_next_string(f);
     if (line[0] != 'P') {
         error("(pnmReadHeader) Magic number does not begin with 'P', but with a '%c'", line[0]);
     }
@@ -67,7 +68,7 @@ int pnmReadHeader(std::ifstream &f, std::size_t N) {
     magic = strtol(line.c_str(), NULL, 10);
 
     // Read size, for both dimensions
-    line = _getNextString(f);
+    line = get_next_string(f);
     {
         std::size_t ind = line.find(" ");
         if (ind == std::string::npos) {
@@ -85,7 +86,7 @@ int pnmReadHeader(std::ifstream &f, std::size_t N) {
     }
 
     // Read maxval, skipping comments
-    line = _getNextString(f);
+    line = get_next_string(f);
     // I HATE WINDOWS
     // maxval = std::stoi(line);
     maxval = strtol(line.c_str(), NULL, 10);
@@ -102,10 +103,10 @@ int pnmReadHeader(std::ifstream &f, std::size_t N) {
  * pgmReadHeader
  */
 
-void pgmReadHeader(std::ifstream &f, std::size_t N) {
+void pgm::read_header(std::ifstream &f, std::size_t N) {
     int magic;
 
-    magic = pnmReadHeader(f, N);
+    magic = pgm::pnm_read_header(f, N);
     if (magic != 5) {
         error("(pgmReadHeader) Magic number is not 'P5', but 'P%d'", magic);
     }
@@ -116,11 +117,11 @@ void pgmReadHeader(std::ifstream &f, std::size_t N) {
  * pgmRead
  */
 
-std::vector<unsigned char> pgmRead(std::ifstream &f, unsigned int nrows, unsigned int ncols) {
+std::vector<unsigned char> pgm::read(std::ifstream &f, unsigned int nrows, unsigned int ncols) {
     std::vector<unsigned char> img(nrows * ncols);
 
     // Read header
-    pgmReadHeader(f, nrows * ncols);
+    pgm::read_header(f, nrows * ncols);
 
     // Read binary image data
     f.read((char*) &img[0], nrows * ncols);
@@ -134,14 +135,14 @@ std::vector<unsigned char> pgmRead(std::ifstream &f, unsigned int nrows, unsigne
  */
 
 
-std::vector<unsigned char> pgmReadFile(const char *fname, unsigned int nrows, unsigned int ncols) {
+std::vector<unsigned char> pgm::read_file(const char *fname, unsigned int nrows, unsigned int ncols) {
     std::vector<unsigned char> data;
     // Open file
     std::ifstream f(fname, std::ios::in | std::ios::binary);
 
     // Read file
     if (f.is_open()) {
-        data = pgmRead(f, nrows, ncols);
+        data = pgm::read(f, nrows, ncols);
     } else {
         error("(pgmReadFile) Can't open file named '%s' for reading", fname);
     }
@@ -157,7 +158,7 @@ std::vector<unsigned char> pgmReadFile(const char *fname, unsigned int nrows, un
  */
 
 
-void pgmWrite(std::ofstream &f, std::vector<unsigned char> &img, unsigned int nrows, unsigned int ncols) {
+void pgm::write(std::ofstream &f, std::vector<unsigned char> &img, unsigned int nrows, unsigned int ncols) {
     // "%u %u\n", nrows, ncols
     // I HATE WINDOWS
     // std::string buf = std::to_string(nrows) + " " + std::to_string(ncols) + "\n";
@@ -186,13 +187,13 @@ void pgmWrite(std::ofstream &f, std::vector<unsigned char> &img, unsigned int nr
  */
 
 
-void pgmWriteFile(const char *fname, std::vector<unsigned char> &img, unsigned int nrows, unsigned int ncols) {
+void pgm::write_file(const char *fname, std::vector<unsigned char> &img, unsigned int nrows, unsigned int ncols) {
     // Open file
     std::ofstream f(fname, std::ios::out | std::ios::binary);
 
     // Write file
     if (f.is_open()) {
-        pgmWrite(f, img, nrows, ncols);
+        pgm::write(f, img, nrows, ncols);
     } else {
         error("(pgmWriteFile) Can't open file named '%s' for writing", fname);
     }

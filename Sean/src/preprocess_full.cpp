@@ -18,12 +18,12 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
     std::array<float, ZH*(ZH-1)> z_se;
     std::array<float, ZH*(ZH-1)> z_sw;
 
-    std::vector<float> dist_unsafe, dist_safe;
-    std::vector<int> dloc_unsafe, d_loc_safe;
+    std::vector<float> dist_unsafe; // , dist_safe;
+    std::vector<int> dloc_unsafe; // , d_loc_safe;
 
     double theta, phi1, phi2;
-    double tilt_min, tilt_check;
-    float z1, z2, dz1, dz2, dist_;
+    //double tilt_min, tilt_check;
+    float z1, z2, dz1, dz2;
 
     // Zero the data
     std::fill(output.begin(), output.end(), 0);
@@ -32,7 +32,8 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
     // Distances to guarantee unsafe
     footpad_dist_4point(R_BASE - 2 * R_FOOT, R_BASE, dist_unsafe, dloc_unsafe);
     // Distances to guarantee safe
-    footpad_dist_4point(R_BASE - SPACING, R_BASE, dist_safe, dloc_safe);
+    // TODO
+    //footpad_dist_4point(R_BASE - SPACING, R_BASE, dist_safe, dloc_safe);
 
     for (int i = BUFFER/2; i < NROWS_HEIGHT - BUFFER/2; i++) {
         for (int j = BUFFER/2; j < NCOLS_HEIGHT - BUFFER/2; j++) {
@@ -60,9 +61,9 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
             cblas_saxpy(ZH*(ZH - 1), -1., &z_ne[0], 1, &z_sw[0], 1);
 
             // figure out if any cause it to be unsafe
-            auto dist_long_ind = dist_long.begin();
-            tilt_min = 0.;
-            for (auto z_ind = d_loc.begin(); z_ind < d_loc.end(); z_ind++, dist_ind++) {
+            //auto dist_ind = dist_unsafe.begin();
+            //tilt_min = 0.;
+            for (auto z_ind = dloc_unsafe.begin(); z_ind < dloc_unsafe.end(); z_ind++) {
                 /*
                  * Find guaranteed unsafe
                  * Need to use full diameter to guaratee is unsafe
@@ -101,7 +102,7 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
                  *************************************************************/
 
                 // If already not safe, continue
-                if (tilt_min > ANGLE_SAFE) {
+                /*if (tilt_min > ANGLE_SAFE) {
                     continue;
                 }
 
@@ -125,18 +126,18 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
 
                 if (tilt_check > tilt_min) {
                     tilt_min = tilt_check;
-                }
+                }*/
             }
 
-            if (tilt_min < ANGLE_SAFE) {
+            /*if (tilt_min < ANGLE_SAFE) {
                 goto is_safe;
-            }
+            }*/
 
             /******************************************************************
              * Safety unknown
              *****************************************************************/
 
-            output[NCOLS_HEIGHT*i + j] = FEED_TO_NET;
+            output[NCOLS_HEIGHT*i + j] = SAFE;
             continue;
 
 is_safe:

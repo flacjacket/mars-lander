@@ -7,7 +7,7 @@
 #include "error.h"
 #include "pgm.h"
 #include "preprocess_full.h"
-#include "readraw.h"
+#include "raw.h"
 
 #define TIME_IT(tp1, tp2, call) \
     tp1 = std::chrono::system_clock::now(); call; tp2 = std::chrono::system_clock::now(); print_tp(tp1, tp2);
@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     // Get the data
     std::cout << "Reading data from " << argv[1] << std::endl;
     //TIME_IT(tp1, tp2, data = read_raw(argv[0], NROWS_HEIGHT*NCOLS_HEIGHT));
-    data = read_raw(argv[1], NROWS_HEIGHT*NCOLS_HEIGHT);
+    data = raw::read_file(argv[1], NROWS_HEIGHT*NCOLS_HEIGHT);
 
     // Preprocess the data
     std::cout << "Preprocessing data" << std::endl;
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 
     // Save the output
     std::cout << "Saving data to " << argv[2] << std::endl;
-    pgmWriteFile(argv[2], output, NROWS, NCOLS);
+    pgm::write_file(argv[2], output, NROWS, NCOLS);
 
     /* This block checks the reading of PGM files against the exported PGM
     // Read that output back in
