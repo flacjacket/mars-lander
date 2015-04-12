@@ -23,7 +23,6 @@
 #define ZW 21
 
 void base_loc(double r_min, double r_max, std::vector<int> &d_loc);
-
 void footpad_dist_4point(double r_min, double r_max, std::vector<float> &dist, std::vector<int> &d_loc);
 
 std::vector<unsigned char> preprocess_gen_pgm(std::vector<unsigned char> &output);

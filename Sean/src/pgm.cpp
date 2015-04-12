@@ -65,7 +65,7 @@ int pgm::pnm_read_header(std::ifstream &f, std::size_t N) {
     }
     // I HATE WINDOWS
     // magic = std::stoi(line.substr(1, std::string::npos));
-    magic = strtol(line.c_str(), NULL, 10);
+    magic = strtol(line.substr(1, std::string::npos).c_str(), NULL, 10);
 
     // Read size, for both dimensions
     line = get_next_string(f);

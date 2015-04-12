@@ -19,7 +19,7 @@ OBJ = $(SRC:.cpp=.o)
 
 all: $(GEN_TARGETS)
 
-gen_%: gen_%.o preprocess_%.o $(OBJ)
+gen_%: gen_%.o nn_gen.o preprocess_%.o $(OBJ)
 	$(CPP) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 gen_%.o: gen_%.cpp
