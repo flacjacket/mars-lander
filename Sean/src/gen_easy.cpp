@@ -37,8 +37,8 @@ int main(int argc, char* argv[]) {
     TIME_IT(tp1, tp2, output = preprocess_easy(data));
 
     // Fix up the edges
-    std::cout << "Fixing the edges" << std::endl;
-    TIME_IT(tp1, tp2, preprocess_fix_edges(output));
+    std::cout << "Generating PGM" << std::endl;
+    TIME_IT(tp1, tp2, output = preprocess_gen_pgm(output));
 
     // Save the output
     std::cout << "Saving data to " << argv[2] << std::endl;

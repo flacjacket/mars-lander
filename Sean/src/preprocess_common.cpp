@@ -4,6 +4,9 @@
 #include "preprocess_common.h"
 #include "data_params.h"
 
+#define SET_OUTPUT(output, i, j) \
+    output[2*i*NCOLS + 2*j] = output[2*i*NCOLS + 2*j + 1] = output[(2*i + 1)*NCOLS + 2*j] = output[(2*i + 1)*NCOLS + 2*j + 1]
+
 
 /*
  * Get the base locations to consider in the height data for a given window
@@ -43,7 +46,6 @@ void footpad_dist_4point(double r_min, double r_max, std::vector<float> &dist, s
                 // If it's acceptible, store the index and the distance
                 d_loc.push_back(ind);
                 dist.push_back(2 * sqrt(d_sq));
-                //dist_short.push_back(sqrt(2 * (c + r) * abs(c - r)) * SPACING_HEIGHT);
             }
             ind++;
         }
@@ -52,13 +54,29 @@ void footpad_dist_4point(double r_min, double r_max, std::vector<float> &dist, s
 
 
 /*
- * Fixes the edges so it matches the data sets we are given
+ * Turns the NROWS_HEIGHT x NCOLS_HEIGHT data vector to a NROWS x NCOLS vector
+ * for pgm output
  */
-void preprocess_fix_edges(std::vector<unsigned char> &output) {
-    for (int i = BUFFER; i < NROWS - BUFFER; i++) {
-        output[BUFFER*NCOLS + i] =                         // Top row
-            output[i*NCOLS + BUFFER] =                     // left column
-            output[i*NCOLS + NROWS - BUFFER - 1] =         // right column
-            output[(NROWS - BUFFER - 1)*NCOLS + i] = 0x00; // Bottom row
+std::vector<unsigned char> preprocess_gen_pgm(std::vector<unsigned char> &output) {
+    std::vector<unsigned char> new_output(NROWS*NCOLS);
+
+    // Zero the data
+    std::fill(new_output.begin(), new_output.end(), UNSAFE);
+
+    // Fill in with the passed data
+    for (int i = BUFFER/2; i < NROWS_HEIGHT - BUFFER/2; i++) {
+        for (int j = BUFFER/2; j < NCOLS_HEIGHT - BUFFER/2; j++) {
+            SET_OUTPUT(new_output, i, j) = output[i*NCOLS_HEIGHT + j];
+        }
     }
+
+    // Fix the edges
+    for (int i = BUFFER; i < NROWS - BUFFER; i++) {
+        new_output[BUFFER*NCOLS + i] =                           // Top row
+            new_output[i*NCOLS + BUFFER] =                       // left column
+            new_output[i*NCOLS + NROWS - BUFFER - 1] =           // right column
+            new_output[(NROWS - BUFFER - 1)*NCOLS + i] = UNSAFE; // Bottom row
+    }
+
+    return new_output;
 }

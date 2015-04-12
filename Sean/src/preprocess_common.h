@@ -22,13 +22,10 @@
 #define ZH 11
 #define ZW 21
 
-#define SET_OUTPUT(output, i, j) \
-    output[2*i*NCOLS + 2*j] = output[2*i*NCOLS + 2*j + 1] = output[(2*i + 1)*NCOLS + 2*j] = output[(2*i + 1)*NCOLS + 2*j + 1]
-
 void base_loc(double r_min, double r_max, std::vector<int> &d_loc);
 
 void footpad_dist_4point(double r_min, double r_max, std::vector<float> &dist, std::vector<int> &d_loc);
 
-void preprocess_fix_edges(std::vector<unsigned char> &output);
+std::vector<unsigned char> preprocess_gen_pgm(std::vector<unsigned char> &output);
 
 #endif // _PREPROCESS_COMMON_H

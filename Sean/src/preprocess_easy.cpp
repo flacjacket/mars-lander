@@ -12,7 +12,7 @@
  * Only check the heights on the easiest dataset
  */
 std::vector<unsigned char> preprocess_easy(std::vector<float> &data) {
-    std::vector<unsigned char> output(NROWS*NCOLS);
+    std::vector<unsigned char> output(NROWS_HEIGHT*NCOLS_HEIGHT);
     std::vector<int> d_loc_unsafe, d_loc_safe;
 
     std::array<float, ZW*ZW> z;
@@ -37,7 +37,7 @@ std::vector<unsigned char> preprocess_easy(std::vector<float> &data) {
                     &z[(k + ZH - 1) * ZW]);
             }
 
-            /*****************************************************************
+            /******************************************************************
              * Check unsafe
              *****************************************************************/
 
@@ -58,7 +58,7 @@ std::vector<unsigned char> preprocess_easy(std::vector<float> &data) {
                 goto is_unsafe;
             }
 
-            /*****************************************************************
+            /******************************************************************
              * Check safe
              *****************************************************************/
 
@@ -75,14 +75,14 @@ std::vector<unsigned char> preprocess_easy(std::vector<float> &data) {
                 goto is_safe;
             }
 
-            /*****************************************************************
+            /******************************************************************
              * Safety unknown
              *****************************************************************/
-            SET_OUTPUT(output, i, j) = FEED_TO_NET;
+            output[NCOLS_HEIGHT*i + j] = FEED_TO_NET;
             continue;
 
 is_safe:
-            SET_OUTPUT(output, i, j) = SAFE;
+            output[NCOLS_HEIGHT*i + j] = SAFE;
             continue;
 
 is_unsafe:
