@@ -21,18 +21,17 @@ n_ref = min(n_safe, n_unsafe)
 n_train = int(n_ref * 0.75)
 n_test = n_ref - n_train
 
-print("Training on {} points, testing on {} points".format(n_train, n_test))
+print("Training on {} of each, testing on {} of each".format(n_train, n_test))
 
-X_train = np.vstack([df_safe[:n_train, :], df_safe[:n_train, :]])
-X_test = np.vstack([df_safe[n_train:n_train+n_test, :], df_safe[n_train:n_train+n_test, :]])
+X_train = np.vstack([df_safe[:n_train, :],
+                     df_unsafe[:n_train, :]])
+X_test = np.vstack([df_safe[n_train:n_train+n_test, :],
+                    df_unsafe[n_train:n_train+n_test, :]])
 
-y_safe = np.array([[1]])
-y_unsafe = np.array([[0]])
-
-y_train = np.vstack([np.repeat(y_safe, n_train, axis=0),
-                     np.repeat(y_unsafe, n_train, axis=0)])
-y_test = np.vstack([np.repeat(y_safe, n_test, axis=0),
-                    np.repeat(y_unsafe, n_test, axis=0)])
+y_train = np.vstack([np.ones((n_train, 1), dtype=int),
+                     np.zeros((n_train, 1), dtype=int)])
+y_test = np.vstack([np.ones((n_test, 1), dtype=int),
+                    np.zeros((n_test, 1), dtype=int)])
 
 serial.save("X_train.pkl", X_train)
 serial.save("X_test.pkl", X_test)
