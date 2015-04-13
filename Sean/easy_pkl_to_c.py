@@ -18,8 +18,8 @@ assert model.layers[1].__class__.__name__ == "RectifiedLinear"
 assert model.layers[2].__class__.__name__ == "Softmax"
 
 # Extract the matrices out of the layers
-bias_list = []
-weights_list = []
+b = []
+w = []
 for i, layer in enumerate(model.layers):
     bias = layer.b.get_value().astype(np.double)
     try:
@@ -33,18 +33,27 @@ for i, layer in enumerate(model.layers):
     bias.tofile(os.path.join(output_dir, 'b{}.raw'.format(i)))
     weights.tofile(os.path.join(output_dir, 'w{}.raw'.format(i)))
 
-    bias_list.append(bias)
-    weights_list.append(weights)
+    b.append(bias)
+    w.append(weights)
 
 # Let's check that the values are reasonable, the training data should have good results
 X = serial.load(pickle_x_train)
 y = serial.load(pickle_y_train).flatten()
 
-for b, w in zip(bias_list, weights_list):
-    X = np.dot(X, w)
-    X += b
-    X[X < 0] = 0
+# RegularizedLinear 1
+X = np.dot(X, w[0])
+X += b[0]
+X[X < 0] = 0
 
+# RegularizedLinear 2
+X = np.dot(X, w[1])
+X += b[1]
+X[X < 0] = 0
+
+#Softmax
+X = np.dot(X, w[2])
+X += b[2]
+X = X.argmax(axis=1)
 X = X.argmax(axis=1)
 
 print("Percent test data correct: {:.1%}".format(np.sum(X == y) / y.size))
@@ -53,11 +62,19 @@ print("Percent test data correct: {:.1%}".format(np.sum(X == y) / y.size))
 X = serial.load(pickle_x_test)
 y = serial.load(pickle_y_test).flatten()
 
-for b, w in zip(bias_list, weights_list):
-    X = np.dot(X, w)
-    X += b
-    X[X < 0] = 0
+# RegularizedLinear 1
+X = np.dot(X, w[0])
+X += b[0]
+X[X < 0] = 0
 
+# RegularizedLinear 2
+X = np.dot(X, w[1])
+X += b[1]
+X[X < 0] = 0
+
+#Softmax
+X = np.dot(X, w[2])
+X += b[2]
 X = X.argmax(axis=1)
 
 print("Percent test data correct: {:.1%}".format(np.sum(X == y) / y.size))
