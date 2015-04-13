@@ -23,3 +23,4 @@
 # Some specific things for Sean
 /Sean/src/gen_*
 !/Sean/src/gen_*.cpp
+/Sean/nn_files_easy
