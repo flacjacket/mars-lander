@@ -36,17 +36,17 @@ std::vector<float> raw::read_file(const char *filename, std::size_t size) {
     // Open the file
     std::ifstream f(filename, std::ios::in | std::ios::binary);
 
-    if (f.is_open()) {
-        // Try to read in all the data
-        f.read((char*) &data[0], size * sizeof(float));
-
-        // Error handling
-        if (!f) {
-            f.close();
-            error("Error reading, only %d bytes read", f.gcount());
-        }
-    } else {
+    if (!f.is_open()) {
         error("(read_raw) Unable to open - %s", filename);
+    }
+
+    // Try to read in all the data
+    f.read((char*) &data[0], size * sizeof(float));
+
+    // Error handling
+    if (!f) {
+        f.close();
+        error("Error reading, only %d bytes read", f.gcount());
     }
 
     // Close file
@@ -57,6 +57,7 @@ std::vector<float> raw::read_file(const char *filename, std::size_t size) {
     for (unsigned i = 0; i < size; i++) {
         endian_swap(&data[i]);
     }
-    return data;
 #endif
+
+    return data;
 }

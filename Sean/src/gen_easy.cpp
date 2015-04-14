@@ -17,7 +17,7 @@
  * Generate a Neural Network input for the given input height files
  */
 
-void print_tp(std::chrono::system_clock::time_point tp1, std::chrono::system_clock::time_point tp2) {
+static void print_tp(std::chrono::system_clock::time_point tp1, std::chrono::system_clock::time_point tp2) {
     std::chrono::milliseconds diff = std::chrono::duration_cast<std::chrono::milliseconds>(tp2 - tp1);
     std::cout << "Time: " << diff.count() << " ms" << std::endl;
 }
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 
     // Read the image
     std::cout << "Reading image data from " << argv[2] << std::endl;
-   input_image = pgm::read_file(argv[2], NROWS, NCOLS);
+    input_image = pgm::read_file(argv[2], NROWS, NCOLS);
 
     // Read the solution
     std::cout << "Reading solution data from " << argv[3] << std::endl;
