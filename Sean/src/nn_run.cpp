@@ -72,10 +72,10 @@ static inline void feed_fwd(std::vector<float> &input, std::vector<float> &outpu
     // dim A: M x K
     // dim B: K x N
     cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-        n_inputs, layer_to, layer_from,  // M, N, K
-        1., &input[0], layer_from,       // alpha, A, leading dim A
-        &weights[0], layer_to,           // B, leading dim B
-        0., &output[0], layer_to);       // beta, C, leading dim C
+                n_inputs, layer_to, layer_from,  // M, N, K
+                1., &input[0], layer_from,       // alpha, A, leading dim A
+                &weights[0], layer_to,           // B, leading dim B
+                0., &output[0], layer_to);       // beta, C, leading dim C
 
     // Apply the bias vector to the input
     // output = 1 * bias + output

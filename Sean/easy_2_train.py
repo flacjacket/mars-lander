@@ -23,14 +23,14 @@ yaml = """\
                 dim: 500,
                 sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
-                max_col_norm: 1.
+                max_col_norm: {max_norm}
             }},
             !obj:pylearn2.models.mlp.RectifiedLinear {{
                 layer_name: 'h1',
                 dim: 500,
                 sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
-                max_col_norm: 1.
+                max_col_norm: {max_norm}
             }},
             !obj:pylearn2.models.mlp.Softmax {{
                 layer_name: 'y',
@@ -42,14 +42,14 @@ yaml = """\
         nvis: {n_features},
     }},
 
-    # We train using batch gradient descent
-    algorithm: !obj:pylearn2.training_algorithms.bgd.BGD {{
-        batch_size: 1000,
+    # We train using stochastic gradient descent
+    algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {{
+        batch_size: 250,
 
-        #learning_rate: 1e-1,
-        #learning_rule: !obj:pylearn2.training_algorithms.learning_rule.Momentum {{
-        #    init_momentum: 0.5,
-        #}},
+        learning_rate: 1e-1,
+        learning_rule: !obj:pylearn2.training_algorithms.learning_rule.Momentum {{
+            init_momentum: 0.5,
+        }},
 
         # We monitor how well we're doing during training on a validation set
         monitoring_dataset: {{
@@ -59,6 +59,17 @@ yaml = """\
                 y: !pkl: '{y_test}',
                 y_labels: 2,
             }},
+        }},
+
+        cost: !obj:pylearn2.costs.mlp.dropout.Dropout {{
+            input_include_probs: {{
+                'h0' : .8,
+                'h1' : .8
+            }},
+            input_scales: {{
+                'h0' : 1.,
+                'h1' : 1.
+            }}
         }},
 
         # We stop after 50 epochs
@@ -88,6 +99,7 @@ yaml = """\
 }}
 """.format(
     n_features=n_features,
+    max_norm=0.5,
     save_file=nn_save,
     save_file_best=nn_save_best,
     x_train=pickle_x_train,
