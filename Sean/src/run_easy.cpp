@@ -29,14 +29,14 @@ static void print_tp(std::chrono::system_clock::time_point tp1, std::chrono::sys
 int main(int argc, char* argv[]) {
     std::vector<float> input_height;
     std::vector<unsigned char> input_image;
+    std::vector<unsigned char> output;
 
-    std::vector<unsigned char> output_preprocess;
-    std::vector<unsigned char> output_nn;
+    std::vector<float> nn_input;
 
     std::chrono::system_clock::time_point tp1, tp2;
 
-    std::vector<std::vector<float>> biases, weights;
-    int prev_layer_size;
+    std::vector<std::vector<float>> weights, biases;
+    int prev_layer_size, next_layer_size;
     int n_layers;
 
     if (argc != 6) {
@@ -64,24 +64,26 @@ int main(int argc, char* argv[]) {
         // Read weights
         sprintf(buffer, "%s/w%d.raw", argv[3], i);
         std::cout << "Reading weights from " << buffer;
-        prev_layer_size = nn::read_layer(buffer, biases, prev_layer_size);
+        next_layer_size = nn::read_layer(buffer, weights, prev_layer_size);
 
-        std::cout << ", size " << prev_layer_size << std:: endl;
+        std::cout << ", " << next_layer_size << " x " << prev_layer_size << std:: endl;
 
         // Read biases
         sprintf(buffer, "%s/b%d.raw", argv[3], i);
         std::cout << "Reading biases from " << buffer << std::endl;
-        int bias_size = nn::read_layer(buffer, biases, prev_layer_size);
+        int bias_size = nn::read_layer(buffer, biases, next_layer_size);
 
         if (bias_size != 1) {
             error("(main) Bias must have sive 1, got %d", bias_size);
         }
 
+        prev_layer_size = next_layer_size;
     }
 
     if (prev_layer_size != 2) {
         error("(main) Final layer must be softmax with size 2");
     }
+    std::cout << std::endl;
 
     /*************************************************************************
      * Data preprocessing
@@ -89,17 +91,21 @@ int main(int argc, char* argv[]) {
 
     // Preprocess the data
     std::cout << "Preprocessing data" << std::endl;
-    TIME_IT(tp1, tp2, output_preprocess = preprocess_easy(input_height));
+    TIME_IT(tp1, tp2, output = preprocess_easy(input_height));
 
     // Extrapolate to 1000x1000
     std::cout << "Generating PGM" << std::endl;
-    TIME_IT(tp1, tp2, output_preprocess = preprocess_gen_pgm(output_preprocess));
+    TIME_IT(tp1, tp2, output = preprocess_gen_pgm(output));
+    std::cout << std::endl;
 
     /*************************************************************************
      * Neural Net run
      ************************************************************************/
 
-    // TODO
+    // Generate the NN output
+    std::cout << "Generating NN solution" << std::endl;
+    TIME_IT(tp1, tp2, nn::generate_solution(output, input_image, weights, biases));
+    std::cout << std::endl;
 
     /*************************************************************************
      * Data saving
@@ -107,5 +113,5 @@ int main(int argc, char* argv[]) {
 
     // Save the PGM
     std::cout << "Saving PGM to " << argv[5] << std::endl;
-    //pgm::write_file(argv[5], output_nn, NROWS, NCOLS);
+    pgm::write_file(argv[5], output, NROWS, NCOLS);
 }

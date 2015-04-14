@@ -7,12 +7,11 @@
 
 #include "nn_common.h"
 
-/**********
-* used for generating and saveing NN data input
-*/
 
 namespace nn {
     int read_layer(const char *fname, std::vector<std::vector<float>> &layer_list, int prev_size);
+    void generate_solution(std::vector<unsigned char> &output, std::vector<unsigned char> &image,
+                           std::vector<std::vector<float>> &weights, std::vector<std::vector<float>> &biases);
 }
 
 #endif

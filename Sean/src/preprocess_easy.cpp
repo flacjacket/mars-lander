@@ -2,7 +2,6 @@
 #include <array>
 #include <cmath>     // atan2, fabs
 #include <vector>
-#include <openblas/cblas.h>
 
 #include "preprocess_common.h"
 #include "data_params.h"

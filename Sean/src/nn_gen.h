@@ -5,11 +5,7 @@
 #ifndef _NN_GEN_H_
 #define _NN_GEN_H_
 
-// Dimension of window
-#define NN_WINDOW 35
-
-// Number of features
-#define NN_FEAT (NN_WINDOW * NN_WINDOW)
+#include "nn_common.h"
 
 /**********
 * used for generating and saveing NN data input

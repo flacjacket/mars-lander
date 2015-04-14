@@ -14,8 +14,6 @@
 #include "error.h"
 #include "preprocess_common.h"
 
-#define NORMALIZE(x) ((float) ((x) - 159) / 255.)
-
 /*
  * Take NROWS x NCOLS selection and an NROWS x NCOLS image and generate the corresponding NN input
  */
@@ -43,22 +41,19 @@ void nn::from_pgm_labeled(std::vector<unsigned char> &selection, std::vector<uns
     output_safe.reserve(n_safe * NN_FEAT);
     output_unsafe.reserve(n_unsafe * NN_FEAT);
 
-    int loc;
     // Generate all the safe NN input
     for (auto i = ind_safe.begin(); i < ind_safe.end(); i++) {
-        loc = *i;
         for (int r = -NN_WINDOW / 2; r <= NN_WINDOW / 2; r++) {
             for (int c = -NN_WINDOW / 2; c <= NN_WINDOW / 2; c++) {
-                output_safe.push_back(NORMALIZE(image[loc + r*NROWS + c]));
+                output_safe.push_back(NORMALIZE(image[*i + r*NROWS + c]));
             }
         }
     }
     // Generate all the unsafe NN input
     for (auto i = ind_unsafe.begin(); i < ind_unsafe.end(); i++) {
-        loc = *i;
         for (int r = -NN_WINDOW / 2; r <= NN_WINDOW / 2; r++) {
             for (int c = -NN_WINDOW / 2; c <= NN_WINDOW / 2; c++) {
-                output_unsafe.push_back(NORMALIZE(image[loc + r*NROWS + c]));
+                output_unsafe.push_back(NORMALIZE(image[*i + r*NROWS + c]));
             }
         }
     }

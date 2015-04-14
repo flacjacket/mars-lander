@@ -11,4 +11,7 @@
 // Number of features
 #define NN_FEAT (NN_WINDOW * NN_WINDOW)
 
+// How NN input is normalized
+#define NORMALIZE(x) ((float) ((x) - 159) / 255.)
+
 #endif
