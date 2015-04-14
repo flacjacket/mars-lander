@@ -1,6 +1,6 @@
-from train_nn_easy import nn_save_best, output_dir
-from train_nn_easy import pickle_x_train, pickle_y_train
-from train_nn_easy import pickle_x_test, pickle_y_test
+from easy_train_nn import nn_save_best, output_dir, n_features
+from easy_train_nn import pickle_x_train, pickle_y_train
+from easy_train_nn import pickle_x_test, pickle_y_test
 
 from pylearn2.utils import serial
 
@@ -20,21 +20,31 @@ assert model.layers[2].__class__.__name__ == "Softmax"
 # Extract the matrices out of the layers
 b = []
 w = []
+
+prev_size = n_features
+
 for i, layer in enumerate(model.layers):
-    bias = layer.b.get_value().astype(np.double)
+    bias = layer.b.get_value().astype(np.float32)
     try:
         # RectifiedLinear uses trainsformer
-        weights = layer.transformer.get_params()[0].get_value().astype(np.double)
+        weights = layer.transformer.get_params()[0].get_value().astype(np.float32)
     except AttributeError:
         # Softmax uses W
-        weights = layer.W.get_value().astype(np.double)
+        weights = layer.W.get_value().astype(np.float32)
 
-    print("Saving layer {}".format(i))
+    # Quick check dimensions
+    assert weights.shape[0] == prev_size, "Weights have incorrect size, should be {}, got {}".format(prev_size, weights.shape[0])
+    assert weights.shape[1] == bias.shape[0], "Bias has incorrect size, should be {}, got {}".format(weights.shape[1], bias.shape[0])
+    prev_size = weights.shape[1]
+
+    print("Saving layer {}, {} elements".format(i, prev_size))
     bias.tofile(os.path.join(output_dir, 'b{}.raw'.format(i)))
     weights.tofile(os.path.join(output_dir, 'w{}.raw'.format(i)))
 
     b.append(bias)
     w.append(weights)
+
+print("Checking performance of net...")
 
 # Let's check that the values are reasonable, the training data should have good results
 X = serial.load(pickle_x_train)
@@ -53,7 +63,6 @@ X[X < 0] = 0
 #Softmax
 X = np.dot(X, w[2])
 X += b[2]
-X = X.argmax(axis=1)
 X = X.argmax(axis=1)
 
 print("Percent test data correct: {:.1%}".format(np.sum(X == y) / y.size))
