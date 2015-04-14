@@ -7,7 +7,6 @@ import numpy as np
 import os
 import subprocess
 
-from pylearn2.config import yaml_parse
 from pylearn2.utils import serial
 
 this_dir = os.path.split(os.path.abspath(__file__))[0]
@@ -39,6 +38,7 @@ gen_easy_executable = os.path.abspath(os.path.join(this_dir, "src", "gen_easy"))
 
 if os.name == 'nt':
     gen_easy_executable += ".exe"
+
 
 def main():
     if not os.path.exists(output_dir):

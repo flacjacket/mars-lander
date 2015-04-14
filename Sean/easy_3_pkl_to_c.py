@@ -20,7 +20,7 @@ def run_net(X, y, w, b):
     X += b[1]
     X[X < 0] = 0
 
-    #Softmax
+    # Softmax
     X = np.dot(X, w[2])
     X += b[2]
     X = X.argmax(axis=1)
@@ -71,7 +71,7 @@ def main():
     # Let's check that the values are reasonable, the training data should have good results
     X = serial.load(pickle_x_train)
     y = serial.load(pickle_y_train).flatten()
-    
+
     X = run_net(X, y, w, b)
 
     print("Percent training data correct: {:.1%}".format(np.sum(X == y) / y.size))
