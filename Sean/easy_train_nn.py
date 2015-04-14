@@ -7,7 +7,7 @@ import subprocess
 from pylearn2.config import yaml_parse
 from pylearn2.utils import serial
 
-this_dir = os.path.split(__file__)[0]
+this_dir = os.path.split(os.path.abspath(__file__))[0]
 
 training_dir = os.path.abspath(os.path.join(this_dir, "..", "training data", "terrainS0C0R10_100"))
 input_height = os.path.join(training_dir, "terrainS0C0R10_100_500by500_dem.raw")
@@ -42,8 +42,8 @@ if os.name == 'nt':
 yaml = """\
 !obj:pylearn2.train.Train {{
     dataset: &train !obj:pylearn2.datasets.dense_design_matrix.DenseDesignMatrix {{
-        X: !pkl: {x_train},
-        y: !pkl: {y_train},
+        X: !pkl: '{x_train}',
+        y: !pkl: '{y_train}',
         y_labels: 2,
     }},
 
@@ -86,8 +86,8 @@ yaml = """\
         monitoring_dataset: {{
             'train' : *train,
             'valid' : !obj:pylearn2.datasets.dense_design_matrix.DenseDesignMatrix {{
-                X: !pkl: {x_test},
-                y: !pkl: {y_test},
+                X: !pkl: '{x_test}',
+                y: !pkl: '{y_test}',
                 y_labels: 2,
             }},
         }},
@@ -102,7 +102,7 @@ yaml = """\
     extensions: [
         !obj:pylearn2.train_extensions.best_params.MonitorBasedSaveBest {{
              channel_name: 'valid_y_misclass',
-             save_path: {save_file_best}
+             save_path: '{save_file_best}'
         }},
         # http://daemonmaker.blogspot.com/2014/12/monitoring-experiments-in-pylearn2.html
         !obj:pylearn2.train_extensions.live_monitoring.LiveMonitoring {{}},
@@ -114,7 +114,7 @@ yaml = """\
         #}}
     ],
 
-    save_path: {save_file},
+    save_path: '{save_file}',
     save_freq: 1,
 }}
 """.format(

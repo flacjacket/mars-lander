@@ -7,6 +7,7 @@ from pylearn2.utils import serial
 import numpy as np
 import os
 
+
 # Load and check the model
 print("Loading model")
 model = serial.load(nn_save_best)
