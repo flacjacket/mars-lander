@@ -62,7 +62,7 @@ int nn::read_layer(const char *fname, std::vector<std::vector<float>> &layer_lis
  *
  * Feeds the layer input forward.
  */
-static inline std::vector<float> feed_fwd(std::vector<float> input, std::vector<float> weights, std::vector<float> bias, unsigned n_inputs) {
+static inline void feed_fwd(std::vector<float> &input, std::vector<float> &output, std::vector<float> &weights, std::vector<float> &bias, unsigned n_inputs) {
     std::size_t layer_from, layer_to;
 
     // Intuit the size the layer maps from and maps to from the bias vector, check that everything is consistent
@@ -78,7 +78,7 @@ static inline std::vector<float> feed_fwd(std::vector<float> input, std::vector<
     }
 
     // Allocate the output vector
-    std::vector<float> output(layer_to * n_inputs);
+    output.resize(layer_to * n_inputs);
 
     // Do the matrix multiplication
     // output = weights * input
@@ -97,8 +97,6 @@ static inline std::vector<float> feed_fwd(std::vector<float> input, std::vector<
     for (unsigned i = 0; i < n_inputs; i++) {
         cblas_saxpy(layer_to, 1., &bias[0], 1, &output[i * layer_to], 1);
     }
-
-    return output;
 }
 
 
@@ -106,8 +104,9 @@ static inline std::vector<float> feed_fwd(std::vector<float> input, std::vector<
  *
  * Runs the given vector through the given rectified linear layer.
  */
-static inline std::vector<float> apply_rectified_linear(std::vector<float> input, std::vector<float> weights, std::vector<float> bias, int n_inputs) {
-    std::vector<float> output = feed_fwd(input, weights, bias, n_inputs);
+static inline std::vector<float> apply_rectified_linear(std::vector<float> &input, std::vector<float> &weights, std::vector<float> &bias, int n_inputs) {
+    std::vector<float> output;
+    feed_fwd(input, output, weights, bias, n_inputs);
 
     // rectify it
     for (unsigned i = 0; i < output.size(); i++) {
@@ -124,9 +123,11 @@ static inline std::vector<float> apply_rectified_linear(std::vector<float> input
  *
  * Runs the given vector through the given softmax layer.
  */
-static inline std::vector<unsigned char> apply_softmax(std::vector<float> input, std::vector<float> weights, std::vector<float> bias, int n_inputs) {
+static inline std::vector<unsigned char> apply_softmax(std::vector<float> &input, std::vector<float> &weights, std::vector<float> &bias, int n_inputs) {
+    std::vector<float> layer;
     std::vector<unsigned char> output(n_inputs);
-    std::vector<float> layer = feed_fwd(input, weights, bias, n_inputs);
+
+    feed_fwd(input, layer, weights, bias, n_inputs);
 
     for (int i = 0; i < n_inputs; i++) {
         // if second column > first column, it is safe
