@@ -5,7 +5,6 @@
 *********************************************************************/
 
 #include <fstream>
-#include <iostream>
 #include <vector>
 #include <openblas/cblas.h>
 
@@ -23,7 +22,7 @@
  * prev_size).
  */
 int nn::read_layer(const char *fname, std::vector<std::vector<float>> &layer_list, int prev_size) {
-    int file_size, next_size;
+    unsigned file_size, next_size;
 
     // Open the file
     std::ifstream f(fname, std::ios::in | std::ios::binary);
@@ -63,7 +62,7 @@ int nn::read_layer(const char *fname, std::vector<std::vector<float>> &layer_lis
  *
  * Feeds the layer input forward.
  */
-static inline std::vector<float> feed_fwd(std::vector<float> input, std::vector<float> weights, std::vector<float> bias) {
+static inline std::vector<float> feed_fwd(std::vector<float> input, std::vector<float> weights, std::vector<float> bias, unsigned n_inputs) {
     std::size_t layer_from, layer_to;
 
     // Intuit the size the layer maps from and maps to from the bias vector, check that everything is consistent
@@ -74,31 +73,30 @@ static inline std::vector<float> feed_fwd(std::vector<float> input, std::vector<
     }
 
     // Also, check that the input data has the same size
-    if (layer_from != input.size()) {
-        error("(feed_fwd) Improper number of data points fed into layer, got %d, should be size %d", input.size(), layer_from);
+    if (layer_from * n_inputs != input.size()) {
+        error("(feed_fwd) Improper number of data points fed into layer, got %d, should be size %d", input.size(), layer_from * n_inputs);
     }
 
-    //std::cout << layer_from << " " << layer_to << std::endl;
-
     // Allocate the output vector
-    std::vector<float> output(layer_to);
-    //std::cout << 1 << std::endl;
+    std::vector<float> output(layer_to * n_inputs);
 
     // Do the matrix multiplication
     // output = weights * input
-    // using the CBLAS formula:
-    // y = alpha*A*x + beta*y,
-    // dim A: M x N
-    //cblas_sgemv(CblasRowMajor, CblasNoTrans,
-    //        layer_to, layer_from,        // M, N
-    //        1., &weights[0], layer_from, // alpha, A, leading dim A
-    //        &input[0], 1,                // x, inc x
-    //        0., &output[0], 1);          // beta, y, inc y
+    // C = alpha*A*B + beta*C  (cblas formula)
+    // dim C: M x N
+    // dim A: M x K
+    // dim B: K x N
+    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+        n_inputs, layer_to, layer_from,  // M, N, K
+        1., &input[0], layer_from,       // alpha, A, leading dim A
+        &weights[0], layer_to,           // B, leading dim B
+        0., &output[0], layer_to);       // beta, C, leading dim C
 
     // Apply the bias vector to the input
     // output = 1 * bias + output
-    //std::cout << 2 << std::endl;
-    //cblas_saxpy(layer_to, 1., &bias[0], 1, &output[0], 1);
+    for (unsigned i = 0; i < n_inputs; i++) {
+        cblas_saxpy(layer_to, 1., &bias[0], 1, &output[i * layer_to], 1);
+    }
 
     return output;
 }
@@ -108,8 +106,15 @@ static inline std::vector<float> feed_fwd(std::vector<float> input, std::vector<
  *
  * Runs the given vector through the given rectified linear layer.
  */
-static inline std::vector<float> apply_rectified_linear(std::vector<float> input, std::vector<float> weights, std::vector<float> bias) {
-    std::vector<float> output = feed_fwd(input, weights, bias);
+static inline std::vector<float> apply_rectified_linear(std::vector<float> input, std::vector<float> weights, std::vector<float> bias, int n_inputs) {
+    std::vector<float> output = feed_fwd(input, weights, bias, n_inputs);
+
+    // rectify it
+    for (unsigned i = 0; i < output.size(); i++) {
+        if (output[i] < 0) {
+            output[i] = 0;
+        }
+    }
 
     return output;
 }
@@ -119,35 +124,73 @@ static inline std::vector<float> apply_rectified_linear(std::vector<float> input
  *
  * Runs the given vector through the given softmax layer.
  */
-// TODO
+static inline std::vector<unsigned char> apply_softmax(std::vector<float> input, std::vector<float> weights, std::vector<float> bias, int n_inputs) {
+    std::vector<unsigned char> output(n_inputs);
+    std::vector<float> layer = feed_fwd(input, weights, bias, n_inputs);
+
+    for (int i = 0; i < n_inputs; i++) {
+        // if second column > first column, it is safe
+        output[i] = (layer[2 * i] < layer[2 * i + 1]) ? SAFE : UNSAFE;
+    }
+
+    return output;
+}
 
 
-/* Generate solution from selection and the given NN parameters
+/* Generate input to the neural network
  *
- * Replaces the unknown parts of the output with the fed forward solution.
+ * Constructs the vector to feed into the net
  */
-void nn::generate_solution(std::vector<unsigned char> &output, std::vector<unsigned char> &image, std::vector<std::vector<float>> &weights, std::vector<std::vector<float>> &biases) {
-    std::vector<float> nn_input(NN_FEAT);
-    std::vector<float> nn_output;
+int nn::generate_input(std::vector<unsigned char> &solution, std::vector<unsigned char> &image, std::vector<float> &nn_input, std::vector<int> &locs) {
+    int n_inputs = 0;
 
-    for (std::size_t i = 0; i < output.size(); i++) {
+    for (unsigned i = 0; i < solution.size(); i++) {
         // If known safe or unsafe, continue
-        if (output[i] == SAFE || output[i] == UNSAFE) {
+        if (solution[i] == SAFE || solution[i] == UNSAFE) {
             continue;
         }
 
+        // Register the addition of the input
+        locs.push_back(i);
+        n_inputs++;
+    }
+
+    // Resize the input
+    nn_input.resize(n_inputs* NN_FEAT);
+
+    int loc;
+    for (unsigned i = 0; i < locs.size(); i++) {
+        loc = locs[i];
         // Copy the neural net input over
         for (int r = 0; r < NN_WINDOW; r++) {
             for (int c = 0; c < NN_WINDOW; c++) {
-                nn_input[r*NN_WINDOW+c] = NORMALIZE(image[i+(r-NN_WINDOW/2) * NROWS + (c-NN_WINDOW/2)]);
+                nn_input[i*NN_FEAT + r*NN_WINDOW + c] = NORMALIZE(image[loc + (r - NN_WINDOW / 2) * NROWS + (c - NN_WINDOW / 2)]);
             }
         }
+    }
 
-        // Rectified Linear Layer
-        nn_output = apply_rectified_linear(nn_input, weights[0], biases[0]);
-        // Rectified Linear Layer
-        //nn_input = apply_rectified_linear(nn_input, weights[1], biases[1]);
-        // Softmax Layer
-        //nn_input = apply_softmax(nn_input, weights[1], biases[1]);
+    return n_inputs;
+}
+
+
+/* Actually run the net
+ */
+std::vector<unsigned char> nn::generate_output(std::vector<float> &nn_input, int n_examples, std::vector<std::vector<float>> &weights, std::vector<std::vector<float>> &biases) {
+    std::vector<float> nn_layer;
+    // Run the NN
+    // Rectified Linear Layer
+    nn_layer = apply_rectified_linear(nn_input, weights[0], biases[0], n_examples);
+    // Rectified Linear Layer
+    nn_layer = apply_rectified_linear(nn_layer, weights[1], biases[1], n_examples);
+    // Softmax Layer
+    return apply_softmax(nn_layer, weights[2], biases[2], n_examples);
+}
+
+
+/* Apply the solution of the net to the image
+ */
+void nn::apply_output(std::vector<unsigned char> &solution, std::vector<unsigned char> &nn_output, std::vector<int> &locs) {
+    for (unsigned i = 0; i < locs.size(); i++) {
+        solution[locs[i]] = nn_output[i];
     }
 }

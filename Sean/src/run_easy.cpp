@@ -4,6 +4,7 @@
 #include <vector>
 
 // ... I hate Windows, c.f. pgm.cpp
+#include <cstdio>
 #include <cstdlib>
 
 #include "data_params.h"
@@ -29,9 +30,15 @@ static void print_tp(std::chrono::system_clock::time_point tp1, std::chrono::sys
 int main(int argc, char* argv[]) {
     std::vector<float> input_height;
     std::vector<unsigned char> input_image;
-    std::vector<unsigned char> output;
+    std::vector<unsigned char> solution;
 
+    // number of points to feed to net
+    int n_examples;
+    // input and output from net
     std::vector<float> nn_input;
+    std::vector<unsigned char> nn_output;
+    // locations of points to feed to net
+    std::vector<int> nn_locs;
 
     std::chrono::system_clock::time_point tp1, tp2;
 
@@ -91,20 +98,28 @@ int main(int argc, char* argv[]) {
 
     // Preprocess the data
     std::cout << "Preprocessing data" << std::endl;
-    TIME_IT(tp1, tp2, output = preprocess_easy(input_height));
+    TIME_IT(tp1, tp2, solution = preprocess_easy(input_height));
 
     // Extrapolate to 1000x1000
     std::cout << "Generating PGM" << std::endl;
-    TIME_IT(tp1, tp2, output = preprocess_gen_pgm(output));
+    TIME_IT(tp1, tp2, solution = preprocess_gen_pgm(solution));
     std::cout << std::endl;
 
     /*************************************************************************
      * Neural Net run
      ************************************************************************/
 
+    // Generate the NN input
+    std::cout << "Generating NN input" << std::endl;
+    TIME_IT(tp1, tp2, n_examples = nn::generate_input(solution, input_image, nn_input, nn_locs));
+
     // Generate the NN output
-    std::cout << "Generating NN solution" << std::endl;
-    TIME_IT(tp1, tp2, nn::generate_solution(output, input_image, weights, biases));
+    std::cout << "Generating NN output" << std::endl;
+    TIME_IT(tp1, tp2, nn_output = nn::generate_output(nn_input, n_examples, weights, biases));
+
+    // Apply the NN solution to the image
+    std::cout << "Applying NN solution" << std::endl;
+    TIME_IT(tp1, tp2, nn::apply_output(solution, nn_output, nn_locs));
     std::cout << std::endl;
 
     /*************************************************************************
@@ -113,5 +128,5 @@ int main(int argc, char* argv[]) {
 
     // Save the PGM
     std::cout << "Saving PGM to " << argv[5] << std::endl;
-    pgm::write_file(argv[5], output, NROWS, NCOLS);
+    pgm::write_file(argv[5], solution, NROWS, NCOLS);
 }

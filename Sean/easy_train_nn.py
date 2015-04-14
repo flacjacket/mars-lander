@@ -1,5 +1,8 @@
 from __future__ import print_function
 
+from py_utils.pgm import read_pgm
+from py_utils.compare_output import compare_guesses
+
 import numpy as np
 import os
 import subprocess
@@ -19,7 +22,8 @@ for check_file in [input_height, input_image, input_solution]:
         raise ValueError("File does not exist:", check_file)
 
 output_dir = os.path.join(this_dir, "nn_files_easy")
-output_pgm = os.path.join(output_dir, "out_easy.pgm")
+output_pgm = os.path.join(output_dir, "out_easy_preprocessing.pgm")
+output_png = os.path.join(output_dir, "out_easy_preprocessing.png")
 output_nn = os.path.join(output_dir, "nn_out")
 output_nn_safe = output_nn + "_safe.raw"
 output_nn_unsafe = output_nn + "_unsafe.raw"
@@ -138,6 +142,12 @@ def main():
 
     subprocess.check_call([gen_easy_executable, input_height, input_image,
                            input_solution, output_pgm, output_nn])
+
+    print()
+    gen = read_pgm(output_pgm)
+    sol = read_pgm(input_solution)
+    fill = read_pgm(input_image)
+    compare_guesses(gen, sol, fill, output_png)
 
     ##########################################################################
     # Pickle NN input
