@@ -20,14 +20,21 @@ yaml = """\
         layers : [
             !obj:pylearn2.models.mlp.RectifiedLinear {{
                 layer_name: 'h0',
-                dim: 500,
+                dim: 750,
                 sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
                 max_col_norm: {max_norm}
             }},
             !obj:pylearn2.models.mlp.RectifiedLinear {{
                 layer_name: 'h1',
-                dim: 500,
+                dim: 750,
+                sparse_init: 15,
+                # Rather than using weight decay, we constrain the norms of the weight vectors
+                max_col_norm: {max_norm}
+            }},
+            !obj:pylearn2.models.mlp.RectifiedLinear {{
+                layer_name: 'h2',
+                dim: 750,
                 sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
                 max_col_norm: {max_norm}
@@ -44,7 +51,7 @@ yaml = """\
 
     # We train using stochastic gradient descent
     algorithm: !obj:pylearn2.training_algorithms.sgd.SGD {{
-        batch_size: 250,
+        batch_size: 100,
 
         learning_rate: 1e-1,
         learning_rule: !obj:pylearn2.training_algorithms.learning_rule.Momentum {{
@@ -63,18 +70,20 @@ yaml = """\
 
         cost: !obj:pylearn2.costs.mlp.dropout.Dropout {{
             input_include_probs: {{
-                'h0' : .8,
-                'h1' : .8
+                # 'h0' : .8,
+                # 'h1' : .8
             }},
             input_scales: {{
-                'h0' : 1.,
-                'h1' : 1.
+                # 'h0' : 1.,
+                # 'h1' : 1.
             }}
         }},
 
-        # We stop after 50 epochs
-        termination_criterion: !obj:pylearn2.termination_criteria.EpochCounter {{
-            max_epochs: 50,
+        # We stop if we don't improve after 10 epochs
+        termination_criterion: !obj:pylearn2.termination_criteria.MonitorBased {{
+            channel_name: "valid_y_misclass",
+            prop_decrease: 0.001,
+            N: 10
         }},
     }},
 
@@ -92,6 +101,16 @@ yaml = """\
         #    saturate: 100,
         #    decay_factor: .01
         #}}
+        !obj:pylearn2.training_algorithms.learning_rule.MomentumAdjustor {{
+            start: 1,
+            saturate: 100,
+            final_momentum: .8
+        }},
+        !obj:pylearn2.training_algorithms.sgd.LinearDecayOverEpoch {{
+            start: 1,
+            saturate: 100,
+            decay_factor: 1e-3
+        }},
     ],
 
     save_path: '{save_file}',
@@ -99,7 +118,7 @@ yaml = """\
 }}
 """.format(
     n_features=n_features,
-    max_norm=0.5,
+    max_norm=1.,
     save_file=nn_save,
     save_file_best=nn_save_best,
     x_train=pickle_x_train,
