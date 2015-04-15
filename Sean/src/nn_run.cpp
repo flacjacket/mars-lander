@@ -122,7 +122,7 @@ static inline void apply_softmax(std::vector<float> &input, std::vector<unsigned
  *
  * Constructs the vector to feed into the net
  */
-int nn::generate_input(std::vector<unsigned char> &solution, std::vector<int> &locs) {
+int nn::generate_input(std::vector<unsigned char> &solution, std::vector<unsigned> &locs) {
     int n_inputs = 0;
 
     for (unsigned i = 0; i < solution.size(); i++) {
@@ -143,10 +143,10 @@ int nn::generate_input(std::vector<unsigned char> &solution, std::vector<int> &l
 #define N_BATCH 4096
 
 void nn::generate_solution(
-        std::vector<unsigned char> &solution, std::vector<int> &locs, std::vector<unsigned char> &image,
+        std::vector<unsigned char> &solution, std::vector<unsigned> &locs, std::vector<unsigned char> &image,
         std::vector<std::vector<float>> &weights, std::vector<std::vector<float>> &biases)
 {
-    std::vector<int>::iterator loc = locs.begin();
+    std::vector<unsigned>::iterator loc = locs.begin();
     unsigned i;
 
     unsigned n_examples = locs.size();
@@ -160,7 +160,6 @@ void nn::generate_solution(
     std::vector<unsigned char> nn_output(N_BATCH * size_output);
 
     for (i = 0; i < (n_examples - 1) / N_BATCH; i++) {
-        // This takes ~0.8 sec
         std::vector<float>::iterator input_it = nn_input.begin();
         for (unsigned j = 0; j < N_BATCH; j++) {
             // Copy the neural net input over
@@ -184,7 +183,6 @@ void nn::generate_solution(
         apply_softmax(nn_layer2, nn_output, weights[2], biases[2], N_BATCH, size_layer2, size_output);
 
         // Assign the outputs to the proper solution locations
-        // takes trivial time
         for (unsigned j = 0; j < N_BATCH; j++) {
             solution[*loc] = nn_output[j];
             loc++;
@@ -221,7 +219,6 @@ void nn::generate_solution(
     apply_softmax(nn_layer2, nn_output, weights[2], biases[2], n_examples, size_layer2, size_output);
 
     // Assign the outputs to the proper solution locations
-    // takes trivial time
     for (unsigned j = 0; j < n_examples; j++) {
         solution[*(loc + j)] = nn_output[j];
     }

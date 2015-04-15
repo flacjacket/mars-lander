@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     std::vector<float> nn_input;
     std::vector<unsigned char> nn_output;
     // locations of points to feed to net
-    std::vector<int> nn_locs;
+    std::vector<unsigned> nn_locs;
 
     std::chrono::system_clock::time_point tp1, tp2;
 
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
      ************************************************************************/
 
     // Generate the NN input
-    std::cout << "Generating NN input" << std::endl;
+    std::cout << "Find NN input locations" << std::endl;
     TIME_IT(tp1, tp2, n_examples = nn::generate_input(solution, nn_locs));
 
     // Generate the NN output
