@@ -152,11 +152,13 @@ void nn::generate_solution(
     unsigned n_examples = locs.size();
     unsigned size_layer1 = biases[0].size();
     unsigned size_layer2 = biases[1].size();
-    unsigned size_output = biases[2].size();
+    unsigned size_layer3 = biases[2].size();
+    unsigned size_output = biases[3].size();
 
     std::vector<float> nn_input(N_BATCH * NN_FEAT);
     std::vector<float> nn_layer1(N_BATCH * size_layer1);
     std::vector<float> nn_layer2(N_BATCH * size_layer2);
+    std::vector<float> nn_layer3(N_BATCH * size_layer3);
     std::vector<unsigned char> nn_output(N_BATCH * size_output);
 
     for (i = 0; i < (n_examples - 1) / N_BATCH; i++) {
@@ -179,8 +181,10 @@ void nn::generate_solution(
         apply_rectified_linear(nn_input, nn_layer1, weights[0], biases[0], N_BATCH, NN_FEAT, size_layer1);
         // Rectified Linear Layer
         apply_rectified_linear(nn_layer1, nn_layer2, weights[1], biases[1], N_BATCH, size_layer1, size_layer2);
+        // Rectified Linear Layer
+        apply_rectified_linear(nn_layer1, nn_layer2, weights[2], biases[2], N_BATCH, size_layer1, size_layer2);
         // Softmax Layer
-        apply_softmax(nn_layer2, nn_output, weights[2], biases[2], N_BATCH, size_layer2, size_output);
+        apply_softmax(nn_layer2, nn_output, weights[3], biases[3], N_BATCH, size_layer2, size_output);
 
         // Assign the outputs to the proper solution locations
         for (unsigned j = 0; j < N_BATCH; j++) {
@@ -215,11 +219,14 @@ void nn::generate_solution(
     apply_rectified_linear(nn_input, nn_layer1, weights[0], biases[0], n_examples, NN_FEAT, size_layer1);
     // Rectified Linear Layer
     apply_rectified_linear(nn_layer1, nn_layer2, weights[1], biases[1], n_examples, size_layer1, size_layer2);
+    // Rectified Linear Layer
+    apply_rectified_linear(nn_layer1, nn_layer2, weights[2], biases[2], n_examples, size_layer1, size_layer2);
     // Softmax Layer
-    apply_softmax(nn_layer2, nn_output, weights[2], biases[2], n_examples, size_layer2, size_output);
+    apply_softmax(nn_layer2, nn_output, weights[3], biases[3], n_examples, size_layer2, size_output);
 
     // Assign the outputs to the proper solution locations
     for (unsigned j = 0; j < n_examples; j++) {
-        solution[*(loc + j)] = nn_output[j];
+        solution[*loc] = nn_output[j];
+        loc++;
     }
 }

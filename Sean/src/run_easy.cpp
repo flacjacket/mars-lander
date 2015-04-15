@@ -32,19 +32,16 @@ int main(int argc, char* argv[]) {
     std::vector<unsigned char> input_image;
     std::vector<unsigned char> solution;
 
-    // number of points to feed to net
-    int n_examples;
     // input and output from net
     std::vector<float> nn_input;
     std::vector<unsigned char> nn_output;
+    // layer wieghts and biases
+    std::vector<std::vector<float>> weights, biases;
     // locations of points to feed to net
     std::vector<unsigned> nn_locs;
 
     std::chrono::system_clock::time_point tp1, tp2;
 
-    std::vector<std::vector<float>> weights, biases;
-    int prev_layer_size, next_layer_size;
-    int n_layers;
 
     if (argc != 6) {
         std::cerr << "Usage: run_easy INPUT_HEIGHT INPUT_IMAGE INPUT_DIR N_LAYERS OUTPUT_SOLUTION" << std::endl;
@@ -63,32 +60,37 @@ int main(int argc, char* argv[]) {
     std::cout << "Reading image data from " << argv[2] << std::endl;
     input_image = pgm::read_file(argv[2], NROWS, NCOLS);
 
-    // Yada, yada, yada, I hate Windows, WHY CAN'T I USE std::stoi and std::to_string?????????
-    prev_layer_size = NN_FEAT;
-    n_layers = strtol(argv[4], NULL, 10);
-    for (int i = 0; i < n_layers; i++) {
-        char buffer[50];
-        // Read weights
-        sprintf(buffer, "%s/w%d.raw", argv[3], i);
-        std::cout << "Reading weights from " << buffer;
-        next_layer_size = nn::read_layer(buffer, weights, prev_layer_size);
+    {
+        int prev_layer_size, next_layer_size, n_layers;
+        prev_layer_size = NN_FEAT;
+        // Figure out number of layers
+        // Yada, yada, yada, I hate Windows, WHY CAN'T I USE std::stoi and std::to_string?????????
+        n_layers = strtol(argv[4], NULL, 10);
+        // Now read in that many weights and biases
+        for (int i = 0; i < n_layers; i++) {
+            char buffer[50];
+            // Read weights
+            sprintf(buffer, "%s/w%d.raw", argv[3], i);
+            std::cout << "Reading weights from " << buffer;
+            next_layer_size = nn::read_layer(buffer, weights, prev_layer_size);
 
-        std::cout << ", " << next_layer_size << " x " << prev_layer_size << std:: endl;
+            std::cout << ", " << next_layer_size << " x " << prev_layer_size << std:: endl;
 
-        // Read biases
-        sprintf(buffer, "%s/b%d.raw", argv[3], i);
-        std::cout << "Reading biases from " << buffer << std::endl;
-        int bias_size = nn::read_layer(buffer, biases, next_layer_size);
+            // Read biases
+            sprintf(buffer, "%s/b%d.raw", argv[3], i);
+            std::cout << "Reading biases from " << buffer << std::endl;
+            int bias_size = nn::read_layer(buffer, biases, next_layer_size);
 
-        if (bias_size != 1) {
-            error("(main) Bias must have sive 1, got %d", bias_size);
+            if (bias_size != 1) {
+                error("(main) Bias must have sive 1, got %d", bias_size);
+            }
+
+            prev_layer_size = next_layer_size;
         }
 
-        prev_layer_size = next_layer_size;
-    }
-
-    if (prev_layer_size != 2) {
-        error("(main) Final layer must be softmax with size 2");
+        if (prev_layer_size != 2) {
+            error("(main) Final layer must be softmax with size 2");
+        }
     }
     std::cout << std::endl;
 
@@ -111,7 +113,7 @@ int main(int argc, char* argv[]) {
 
     // Generate the NN input
     std::cout << "Find NN input locations" << std::endl;
-    TIME_IT(tp1, tp2, n_examples = nn::generate_input(solution, nn_locs));
+    TIME_IT(tp1, tp2, nn::generate_input(solution, nn_locs));
 
     // Generate the NN output
     std::cout << "Generating NN solution" << std::endl;

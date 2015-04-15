@@ -20,9 +20,14 @@ def run_net(X, y, w, b):
     X += b[1]
     X[X < 0] = 0
 
-    # Softmax
+    # RegularizedLinear 3
     X = np.dot(X, w[2])
     X += b[2]
+    X[X < 0] = 0
+
+    # Softmax
+    X = np.dot(X, w[3])
+    X += b[3]
     X = X.argmax(axis=1)
 
     return X
@@ -33,11 +38,12 @@ def main():
     print("Loading model")
     model = serial.load(nn_save_best)
 
-    assert len(model.layers) == 3, "Assuming model has 3 layers (rect lin, rect lin, softmax)"
+    assert len(model.layers) == 4, "Assuming model has 3 layers (rect lin, rect lin, softmax)"
 
     assert model.layers[0].__class__.__name__ == "RectifiedLinear"
     assert model.layers[1].__class__.__name__ == "RectifiedLinear"
-    assert model.layers[2].__class__.__name__ == "Softmax"
+    assert model.layers[2].__class__.__name__ == "RectifiedLinear"
+    assert model.layers[3].__class__.__name__ == "Softmax"
 
     # Extract the matrices out of the layers
     b = []
@@ -76,6 +82,13 @@ def main():
 
     print("Percent training data correct: {:.1%}".format(np.sum(X == y) / y.size))
 
+    tot = np.sum(y)
+    cor = np.sum(X[y == 1])
+    print("Safe:   {} / {} ({:.1%})".format(cor, tot, cor / tot))
+    tot = len(y) - tot
+    cor = tot - np.sum(X[y == 0])
+    print("Unsafe: {} / {} ({:.1%})".format(cor, tot, cor / tot))
+
     # Also, check the test data
     X = serial.load(pickle_x_test)
     y = serial.load(pickle_y_test).flatten()
@@ -83,6 +96,13 @@ def main():
     X = run_net(X, y, w, b)
 
     print("Percent test data correct: {:.1%}".format(np.sum(X == y) / y.size))
+
+    tot = np.sum(y)
+    cor = np.sum(X[y == 1])
+    print("Safe:   {} / {} ({:.1%})".format(cor, tot, cor / tot))
+    tot = len(y) - tot
+    cor = tot - np.sum(X[y == 0])
+    print("Unsafe: {} / {} ({:.1%})".format(cor, tot, cor / tot))
 
 
 if __name__ == "__main__":

@@ -23,21 +23,21 @@ yaml = """\
                 dim: 750,
                 sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
-                max_col_norm: {max_norm}
+                # max_col_norm: {max_norm}
             }},
             !obj:pylearn2.models.mlp.RectifiedLinear {{
                 layer_name: 'h1',
                 dim: 750,
                 sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
-                max_col_norm: {max_norm}
+                # max_col_norm: {max_norm}
             }},
             !obj:pylearn2.models.mlp.RectifiedLinear {{
                 layer_name: 'h2',
                 dim: 750,
                 sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
-                max_col_norm: {max_norm}
+                # max_col_norm: {max_norm}
             }},
             !obj:pylearn2.models.mlp.Softmax {{
                 layer_name: 'y',

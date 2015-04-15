@@ -18,7 +18,7 @@ if os.name == 'nt':
 
 
 def main():
-    subprocess.check_call([run_easy_executable, input_height, input_image, input_dir, "3", output_pgm])
+    subprocess.check_call([run_easy_executable, input_height, input_image, input_dir, "4", output_pgm])
 
     print()
     gen = read_pgm(output_pgm)
