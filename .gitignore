@@ -22,5 +22,7 @@
 
 # Some specific things for Sean
 /Sean/src/gen_*
+/Sean/src/run_*
 !/Sean/src/gen_*.cpp
+!/Sean/src/run_*.cpp
 /Sean/nn_files_easy
