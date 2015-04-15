@@ -85,7 +85,8 @@ is_safe:
             continue;
 
 is_unsafe:
-            // SET_OUTPUT(output, i, j) = UNSAFE;
+            // Output already zeroed
+            // output[NCOLS_HEIGHT*i + j] = UNSAFE;
             continue;
         }
     }

@@ -23,21 +23,21 @@ yaml = """\
                 dim: 750,
                 sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
-                # max_col_norm: {max_norm}
+                max_col_norm: {max_norm}
             }},
             !obj:pylearn2.models.mlp.RectifiedLinear {{
                 layer_name: 'h1',
                 dim: 750,
                 sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
-                # max_col_norm: {max_norm}
+                max_col_norm: {max_norm}
             }},
             !obj:pylearn2.models.mlp.RectifiedLinear {{
                 layer_name: 'h2',
                 dim: 750,
                 sparse_init: 15,
                 # Rather than using weight decay, we constrain the norms of the weight vectors
-                # max_col_norm: {max_norm}
+                max_col_norm: {max_norm}
             }},
             !obj:pylearn2.models.mlp.Softmax {{
                 layer_name: 'y',
@@ -69,21 +69,21 @@ yaml = """\
         }},
 
         cost: !obj:pylearn2.costs.mlp.dropout.Dropout {{
-            input_include_probs: {{
-                # 'h0' : .8,
-                # 'h1' : .8
-            }},
-            input_scales: {{
-                # 'h0' : 1.,
-                # 'h1' : 1.
-            }}
+            #input_include_probs: {{
+            #    'h0' : .8,
+            #    'h1' : .8
+            #}},
+            #input_scales: {{
+            #    'h0' : 1.,
+            #    'h1' : 1.
+            #}}
         }},
 
         # We stop if we don't improve after 10 epochs
         termination_criterion: !obj:pylearn2.termination_criteria.MonitorBased {{
             channel_name: "valid_y_misclass",
             prop_decrease: 0.001,
-            N: 10
+            N: 25
         }},
     }},
 
@@ -107,7 +107,7 @@ yaml = """\
             final_momentum: .8
         }},
         !obj:pylearn2.training_algorithms.sgd.LinearDecayOverEpoch {{
-            start: 1,
+            start: 50,
             saturate: 100,
             decay_factor: 1e-3
         }},
@@ -118,7 +118,7 @@ yaml = """\
 }}
 """.format(
     n_features=n_features,
-    max_norm=1.,
+    max_norm=0.75,
     save_file=nn_save,
     save_file_best=nn_save_best,
     x_train=pickle_x_train,

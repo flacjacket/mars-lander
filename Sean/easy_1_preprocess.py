@@ -70,25 +70,21 @@ def main():
 
     print("Loaded {} safe and {} unsafe training data points".format(n_safe, n_unsafe))
 
-    n_train_safe = int(n_safe * 0.9)
-    n_train_unsafe = int(n_unsafe * 0.9)
+    n_test = min(n_safe, n_unsafe)
+    n_train = int(n_test * 0.9)
 
-    n_test_safe = n_safe - n_train_safe
-    n_test_unsafe = n_unsafe - n_train_unsafe
-
-    print("Training on {} safe and {} unsafe".format(n_train_safe, n_train_unsafe))
-    print("Testing on {} safe and {} unsafe".format(n_test_safe, n_test_unsafe))
+    print("Training on {}, testing on {}".format(n_train, n_test - n_train))
 
     print("Saving data... ", end="")
-    X_train = np.vstack([df_safe[:n_train_safe, :],
-                        df_unsafe[:n_train_unsafe, :]])
-    X_test = np.vstack([df_safe[n_train_safe:, :],
-                        df_unsafe[n_train_unsafe:, :]])
+    X_train = np.vstack([df_safe[:n_train, :],
+                        df_unsafe[:n_train, :]])
+    X_test = np.vstack([df_safe[n_train:n_test, :],
+                        df_unsafe[n_train:n_test, :]])
 
-    y_train = np.vstack([np.ones((n_train_safe, 1), dtype=int),
-                         np.zeros((n_train_unsafe, 1), dtype=int)])
-    y_test = np.vstack([np.ones((n_test_safe, 1), dtype=int),
-                        np.zeros((n_test_unsafe, 1), dtype=int)])
+    y_train = np.vstack([np.ones((n_train, 1), dtype=int),
+                         np.zeros((n_train, 1), dtype=int)])
+    y_test = np.vstack([np.ones((n_test - n_train, 1), dtype=int),
+                        np.zeros((n_test - n_train, 1), dtype=int)])
 
     serial.save(pickle_x_train, X_train)
     serial.save(pickle_x_test, X_test)

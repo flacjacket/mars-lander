@@ -64,10 +64,7 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
             //auto dist_ind = dist_unsafe.begin();
             //tilt_min = 0.;
             for (auto z_ind = dloc_unsafe.begin(); z_ind < dloc_unsafe.end(); z_ind++) {
-                /*
-                 * Find guaranteed unsafe
-                 * Need to use full diameter to guaratee is unsafe
-                 */
+                // Compute unsafe tilt
                 z1 = z_nw[*z_ind];
                 dz1 = z_se[*z_ind];
                 z2 = z_ne[*z_ind];
@@ -89,7 +86,7 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
                 }
 
                 /**************************************************************
-                 * Check unsafe
+                 * Check unsafe tilt
                  *************************************************************/
 
                 // Check tilting each direction
@@ -145,7 +142,8 @@ is_safe:
             continue;
 
 is_unsafe:
-            // SET_OUTPUT(output, i, j) = UNSAFE;
+            // Output already zeroed
+            // output[NCOLS_HEIGHT*i + j] = UNSAFE;
             continue;
         }
     }

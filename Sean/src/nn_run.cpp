@@ -182,9 +182,9 @@ void nn::generate_solution(
         // Rectified Linear Layer
         apply_rectified_linear(nn_layer1, nn_layer2, weights[1], biases[1], N_BATCH, size_layer1, size_layer2);
         // Rectified Linear Layer
-        apply_rectified_linear(nn_layer1, nn_layer2, weights[2], biases[2], N_BATCH, size_layer1, size_layer2);
+        apply_rectified_linear(nn_layer2, nn_layer3, weights[2], biases[2], N_BATCH, size_layer2, size_layer3);
         // Softmax Layer
-        apply_softmax(nn_layer2, nn_output, weights[3], biases[3], N_BATCH, size_layer2, size_output);
+        apply_softmax(nn_layer3, nn_output, weights[3], biases[3], N_BATCH, size_layer3, size_output);
 
         // Assign the outputs to the proper solution locations
         for (unsigned j = 0; j < N_BATCH; j++) {
@@ -220,9 +220,9 @@ void nn::generate_solution(
     // Rectified Linear Layer
     apply_rectified_linear(nn_layer1, nn_layer2, weights[1], biases[1], n_examples, size_layer1, size_layer2);
     // Rectified Linear Layer
-    apply_rectified_linear(nn_layer1, nn_layer2, weights[2], biases[2], n_examples, size_layer1, size_layer2);
+    apply_rectified_linear(nn_layer2, nn_layer3, weights[2], biases[2], n_examples, size_layer2, size_layer3);
     // Softmax Layer
-    apply_softmax(nn_layer2, nn_output, weights[3], biases[3], n_examples, size_layer2, size_output);
+    apply_softmax(nn_layer3, nn_output, weights[3], biases[3], n_examples, size_layer3, size_output);
 
     // Assign the outputs to the proper solution locations
     for (unsigned j = 0; j < n_examples; j++) {
