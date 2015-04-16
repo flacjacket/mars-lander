@@ -18,11 +18,10 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
     std::array<float, ZH*(ZH-1)> z_se;
     std::array<float, ZH*(ZH-1)> z_sw;
 
-    std::vector<float> dist_unsafe; // , dist_safe;
-    std::vector<int> dloc_unsafe; // , d_loc_safe;
+    std::vector<float> dist_unsafe;
+    std::vector<unsigned> dloc_unsafe;
 
-    double theta, phi1, phi2;
-    //double tilt_min, tilt_check;
+    float alpha, beta1, beta2, theta;
     float z1, z2, dz1, dz2;
 
     // Zero the data
@@ -31,9 +30,6 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
     // pre-compute locations given acceptable distances
     // Distances to guarantee unsafe
     footpad_dist_4point(R_BASE - 2 * R_FOOT, R_BASE, dist_unsafe, dloc_unsafe);
-    // Distances to guarantee safe
-    // TODO
-    //footpad_dist_4point(R_BASE - SPACING, R_BASE, dist_safe, dloc_safe);
 
     for (int i = BUFFER/2; i < NROWS_HEIGHT - BUFFER/2; i++) {
         for (int j = BUFFER/2; j < NCOLS_HEIGHT - BUFFER/2; j++) {
@@ -61,28 +57,34 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
             cblas_saxpy(ZH*(ZH - 1), -1., &z_ne[0], 1, &z_sw[0], 1);
 
             // figure out if any cause it to be unsafe
-            //auto dist_ind = dist_unsafe.begin();
-            //tilt_min = 0.;
             for (auto z_ind = dloc_unsafe.begin(); z_ind < dloc_unsafe.end(); z_ind++) {
+                unsigned ind = *z_ind;
+                unsigned r = ind / (ZH - 1);
+                unsigned c = ind % (ZH - 1) + 1;
+
                 // Compute unsafe tilt
-                z1 = z_nw[*z_ind];
-                dz1 = z_se[*z_ind];
-                z2 = z_ne[*z_ind];
-                dz2 = z_sw[*z_ind];
+                z1 = z_nw[ind];
+                dz1 = z_se[ind];
+                z2 = z_ne[ind];
+                dz2 = z_sw[ind];
 
                 // Check for unsafe tilting configuration
                 if (z1 + dz1 / 2 > z2 + dz2 / 2) {
                     // Primary landing feet NW/SE
-                    theta = atan(dz1 / (2 * R_BASE));
+                    alpha = atan(-dz1 / (2 * R_BASE));
                     // Midpoint of primary to either secondary
-                    phi1 = atan((z2 - (z1 + dz1 / 2)) / R_BASE);
-                    phi2 = atan((z2 + dz2 - (z1 + dz1 / 2)) / R_BASE);
+                    beta1 = atan((z2 - (z1 + dz1 / 2)) / R_BASE);
+                    beta2 = atan((z2 + dz2 - (z1 + dz1 / 2)) / R_BASE);
+                    // Rotation of base to X-axis
+                    theta = atan(-((float) r) / c);
                 } else {
                     // Primary landing feet NE/SW
-                    theta = atan(dz2 / (2 * R_BASE));
+                    alpha = atan(dz2 / (2 * R_BASE));
                     // Midpoint of primary to either secondary
-                    phi1 = atan((z1 - (z2 + dz2 / 2)) / R_BASE);
-                    phi2 = atan((z1 + dz1 - (z2 + dz2 / 2)) / R_BASE);
+                    beta1 = atan((z1 - (z2 + dz2 / 2)) / R_BASE);
+                    beta2 = atan((z1 + dz1 - (z2 + dz2 / 2)) / R_BASE);
+                    // Rotation of base to X-axis
+                    theta = atan(((float) c) / r);
                 }
 
                 /**************************************************************
@@ -90,7 +92,7 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
                  *************************************************************/
 
                 // Check tilting each direction
-                if (fabs(acos(cos(theta) * cos(phi1))) > ANGLE_UNSAFE || fabs(acos(cos(theta) * cos(phi2))) > ANGLE_UNSAFE) {
+                if (fabs(acos(cos(alpha) * cos(beta1))) > ANGLE_UNSAFE || fabs(acos(cos(alpha) * cos(beta2))) > ANGLE_UNSAFE) {
                     goto is_unsafe;
                 }
 

@@ -1,8 +1,8 @@
 /*********************************************************************
-* nn_gen.cpp
-*
-* Generate and save neural network data
-*********************************************************************/
+ * nn_gen.cpp
+ *
+ * Generate and save neural network data
+ ********************************************************************/
 
 #include <fstream>
 #include <string>
@@ -17,8 +17,13 @@
 /*
  * Take NROWS x NCOLS selection and an NROWS x NCOLS image and generate the corresponding NN input
  */
-void nn::from_pgm_labeled(std::vector<unsigned char> &selection, std::vector<unsigned char> &solution, std::vector<unsigned char> &image,
-                          std::vector<float> &output_safe, std::vector<float> &output_unsafe) {
+void nn::from_pgm_labeled(
+        std::vector<unsigned char> &selection,
+        std::vector<unsigned char> &solution,
+        std::vector<unsigned char> &image,
+        std::vector<float> &output_safe,
+        std::vector<float> &output_unsafe)
+{
     std::vector<int> ind_safe, ind_unsafe;
     std::size_t n_safe = 0, n_unsafe = 0;
 
