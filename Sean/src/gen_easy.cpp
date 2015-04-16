@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Saving PGM to " << argv[4] << std::endl;
     pgm::write_file(argv[4], output_pgm, NROWS, NCOLS);
 
-    // Save NN input input
+    // Save NN input
     std::cout << "Saving NN to " << argv[5] << "_safe.raw and " << argv[5] << "_unsafe.raw" << std::endl;
     nn::write_file(argv[5], output_nn_safe, output_nn_unsafe);
 }
