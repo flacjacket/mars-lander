@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 
     // Read the heights
     std::cout << "Reading height data from " << argv[1] << std::endl;
-    data = raw::read_file(argv[1], NROWS_HEIGHT*NCOLS_HEIGHT);
+    input_height = raw::read_file(argv[1], NROWS_HEIGHT*NCOLS_HEIGHT);
 
     // Read the image
     std::cout << "Reading image data from " << argv[2] << std::endl;
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 
     // Preprocess the data
     std::cout << "Preprocessing data" << std::endl;
-    TIME_IT(tp1, tp2, output = preprocess_full(input_height));
+    TIME_IT(tp1, tp2, output_pgm = preprocess_full(input_height));
 
     // Extrapolate to 1000x1000
     std::cout << "Generating PGM" << std::endl;

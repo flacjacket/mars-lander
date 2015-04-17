@@ -33,7 +33,7 @@ void base_loc(double r_min, double r_max, std::vector<int> &d_loc) {
  *
  * Also gives the distance both diametrically opposite, and 90 deg rotated from the point
  */
-void footpad_dist_4point(double r_min, double r_max, std::vector<float> &dist, std::vector<int> &d_loc) {
+void footpad_dist_4point(double r_min, double r_max, std::vector<float> &dist, std::vector<unsigned> &d_loc) {
     double d_sq;
     int ind = 0;
 
