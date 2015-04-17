@@ -1,12 +1,14 @@
 from __future__ import print_function
 
 from pylearn2.config import yaml_parse
-from easy_1_preprocess import output_dir, n_features, pickle_x_train, pickle_x_test, pickle_y_train, pickle_y_test
+from nn_1_full_preprocess import output_dir, n_features, pickle_x_train, pickle_x_test, pickle_y_train, pickle_y_test, SCR
 
 import os
 
 nn_save = os.path.join(output_dir, "nn_train.pkl")
 nn_save_best = os.path.join(output_dir, "nn_train_best.pkl")
+
+slope, crater, roughness = SCR[1]
 
 yaml = """\
 !obj:pylearn2.train.Train {{
@@ -119,12 +121,12 @@ yaml = """\
 """.format(
     n_features=n_features,
     max_norm=0.75,
-    save_file=nn_save,
-    save_file_best=nn_save_best,
-    x_train=pickle_x_train,
-    x_test=pickle_x_test,
-    y_train=pickle_y_train,
-    y_test=pickle_y_test
+    save_file=nn_save.format(slope=slope, crater=crater, roughness=roughess),
+    save_file_best=nn_save_best.format(slope=slope, crater=crater, roughness=roughess),
+    x_train=pickle_x_train.format(slope=slope, crater=crater, roughness=roughness),
+    x_test=pickle_x_test.format(slope=slope, crater=crater, roughness=roughness),
+    y_train=pickle_y_train.format(slope=slope, crater=crater, roughness=roughness),
+    y_test=pickle_y_test.format(slope=slope, crater=crater, roughness=roughness)
 )
 
 

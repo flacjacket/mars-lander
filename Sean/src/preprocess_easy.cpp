@@ -12,7 +12,7 @@
  */
 std::vector<unsigned char> preprocess_easy(std::vector<float> &data) {
     std::vector<unsigned char> output(NROWS_HEIGHT*NCOLS_HEIGHT);
-    std::vector<int> d_loc_unsafe, d_loc_safe;
+    std::vector<unsigned> d_loc_unsafe, d_loc_safe;
 
     std::array<float, ZW*ZW> z;
     float cur_z, min_z, max_z;

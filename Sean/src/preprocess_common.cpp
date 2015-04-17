@@ -11,12 +11,29 @@
 /*
  * Get the base locations to consider in the height data for a given window
  */
-void base_loc(double r_min, double r_max, std::vector<int> &d_loc) {
+void base_loc(double r_min, double r_max, std::vector<unsigned> &d_loc) {
     double d_sq;
     int ind = 0;
 
     for (int r = 1 - ZH; r < ZH; r++) {
         for (int c = 1 - ZH; c < ZH; c++) {
+            // Compute square distance for the given location and compare it to the min and max square radii
+            d_sq = (c * c + r * r) * (SPACING_HEIGHT * SPACING_HEIGHT);
+            if (d_sq >= r_min * r_min && d_sq < r_max * r_max) {
+                // If it's acceptible, store the index
+                d_loc.push_back(ind);
+            }
+            ind++;
+        }
+    }
+}
+
+void base_loc_4point(double r_min, double r_max, std::vector<unsigned> &d_loc) {
+    double d_sq;
+    int ind = 0;
+
+    for (int r = 0; r < ZH; r++) {
+        for (int c = 1; c < ZH; c++) {
             // Compute square distance for the given location and compare it to the min and max square radii
             d_sq = (c * c + r * r) * (SPACING_HEIGHT * SPACING_HEIGHT);
             if (d_sq >= r_min * r_min && d_sq < r_max * r_max) {

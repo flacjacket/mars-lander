@@ -1,7 +1,7 @@
 CXXFLAGS = -std=c++11 -O2 -Wall -Wextra -pedantic
 
 GEN_TARGETS = gen_easy gen_full
-RUN_TARGETS = run_easy
+RUN_TARGETS = run_easy run_full
 
 ifeq ($(OS),Windows_NT)
 	CPP = g++
