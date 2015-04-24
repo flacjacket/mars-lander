@@ -7,6 +7,7 @@
 
 #include "nn_common.h"
 
+#define NN_CUTOFF 1.
 
 namespace nn {
     int read_layer(const char *fname, std::vector<std::vector<float>> &layer_list, int prev_size);
