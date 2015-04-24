@@ -121,8 +121,8 @@ yaml = """\
 """.format(
     n_features=n_features,
     max_norm=0.75,
-    save_file=nn_save.format(slope=slope, crater=crater, roughness=roughess),
-    save_file_best=nn_save_best.format(slope=slope, crater=crater, roughness=roughess),
+    save_file=nn_save.format(slope=slope, crater=crater, roughness=roughness),
+    save_file_best=nn_save_best.format(slope=slope, crater=crater, roughness=roughness),
     x_train=pickle_x_train.format(slope=slope, crater=crater, roughness=roughness),
     x_test=pickle_x_test.format(slope=slope, crater=crater, roughness=roughness),
     y_train=pickle_y_train.format(slope=slope, crater=crater, roughness=roughness),

@@ -20,7 +20,7 @@ if os.name == 'nt':
 
 
 def main():
-    for slope, crater, roughness in SCR:
+    for slope, crater, roughness in SCR[3:]:
         if slope == 0:
             subprocess.check_call([run_easy_executable,
                                    input_height.format(slope=slope, crater=crater, roughness=roughness),
