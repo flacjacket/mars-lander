@@ -71,14 +71,14 @@ int main(int argc, char* argv[]) {
             char buffer[50];
             // Read weights
             sprintf(buffer, "%s/w%d.raw", argv[3], i);
-            std::cout << "Reading weights from " << buffer;
+            //std::cout << "Reading weights from " << buffer;
             next_layer_size = nn::read_layer(buffer, weights, prev_layer_size);
 
-            std::cout << ", " << next_layer_size << " x " << prev_layer_size << std:: endl;
+            //std::cout << ", " << next_layer_size << " x " << prev_layer_size << std:: endl;
 
             // Read biases
             sprintf(buffer, "%s/b%d.raw", argv[3], i);
-            std::cout << "Reading biases from " << buffer << std::endl;
+            //std::cout << "Reading biases from " << buffer << std::endl;
             int bias_size = nn::read_layer(buffer, biases, next_layer_size);
 
             if (bias_size != 1) {

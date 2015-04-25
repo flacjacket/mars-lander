@@ -4,6 +4,7 @@
 * Run neural network data
 *********************************************************************/
 
+#include <cmath>
 #include <fstream>
 #include <vector>
 #include <openblas/cblas.h>
@@ -105,15 +106,14 @@ static inline void apply_rectified_linear(std::vector<float> &input, std::vector
  *
  * Runs the given vector through the given softmax layer.
  */
-static inline void apply_softmax(std::vector<float> &input, std::vector<unsigned char> &output, std::vector<float> &weights, std::vector<float> &bias, unsigned n_inputs, unsigned layer_from, unsigned layer_to) {
+static inline void apply_softmax(std::vector<float> &input, std::vector<float> &layer, std::vector<unsigned char> &output, std::vector<float> &weights, std::vector<float> &bias, unsigned n_inputs, unsigned layer_from, unsigned layer_to) {
     // First, we have to feed forward
-    std::vector<float> layer(n_inputs * 2);
     feed_fwd(input, layer, weights, bias, n_inputs, layer_from, layer_to);
 
     // Now, determine correct output
     for (unsigned i = 0; i < n_inputs; i++) {
         // if second column > first column, it is safe
-        output[i] = (layer[2 * i] < layer[2 * i + 1]) ? SAFE : UNSAFE;
+        output[i] = ((exp(layer[2 * i]) / exp(layer[2 * i + 1])) < NN_CUTOFF) ? SAFE : UNSAFE;
     }
 }
 
@@ -159,6 +159,7 @@ void nn::generate_solution(
     std::vector<float> nn_layer1(N_BATCH * size_layer1);
     std::vector<float> nn_layer2(N_BATCH * size_layer2);
     std::vector<float> nn_layer3(N_BATCH * size_layer3);
+    std::vector<float> nn_layer_output(N_BATCH * size_output);
     std::vector<unsigned char> nn_output(N_BATCH * size_output);
 
     for (i = 0; i < (n_examples - 1) / N_BATCH; i++) {
@@ -184,7 +185,7 @@ void nn::generate_solution(
         // Rectified Linear Layer
         apply_rectified_linear(nn_layer2, nn_layer3, weights[2], biases[2], N_BATCH, size_layer2, size_layer3);
         // Softmax Layer
-        apply_softmax(nn_layer3, nn_output, weights[3], biases[3], N_BATCH, size_layer3, size_output);
+        apply_softmax(nn_layer3, nn_layer_output, nn_output, weights[3], biases[3], N_BATCH, size_layer3, size_output);
 
         // Assign the outputs to the proper solution locations
         for (unsigned j = 0; j < N_BATCH; j++) {
@@ -198,6 +199,8 @@ void nn::generate_solution(
     nn_input.resize(n_examples * NN_FEAT);
     nn_layer1.resize(n_examples * size_layer1);
     nn_layer2.resize(n_examples * size_layer2);
+    nn_layer3.resize(n_examples * size_layer3);
+    nn_layer_output.resize(n_examples * size_output);
     nn_output.resize(n_examples * size_output);
 
     std::vector<float>::iterator input_it = nn_input.begin();
@@ -222,18 +225,11 @@ void nn::generate_solution(
     // Rectified Linear Layer
     apply_rectified_linear(nn_layer2, nn_layer3, weights[2], biases[2], n_examples, size_layer2, size_layer3);
     // Softmax Layer
-    apply_softmax(nn_layer3, nn_output, weights[3], biases[3], n_examples, size_layer3, size_output);
+    apply_softmax(nn_layer3, nn_layer_output, nn_output, weights[3], biases[3], n_examples, size_layer3, size_output);
 
     // Assign the outputs to the proper solution locations
     for (unsigned j = 0; j < n_examples; j++) {
         solution[*loc] = nn_output[j];
         loc++;
     }
-
-    free(nn_input);
-    free(nn_layer1);
-    free(nn_layer2);
-    free(nn_layer3);
-    free(nn_layer_output);
-    free(nn_output);
 }
