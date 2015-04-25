@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from nn_1_full_preprocess import input_height, input_image, input_solution, this_dir, SCR, output_dir as input_dir
+from nn_1_preprocess import input_height, input_image, input_solution, this_dir, SCR, output_dir as input_dir
 
 from py_utils.compare_output import compare_output
 from py_utils.pgm import read_pgm
