@@ -1,7 +1,7 @@
 from __future__ import print_function
 
-from nn_1_full_preprocess import output_dir, n_features, pickle_x_train, pickle_y_train, pickle_x_test, pickle_y_test, SCR
-from nn_2_S0C0R10_train import nn_save_best
+from nn_1_preprocess import output_dir, n_features, pickle_x_train, pickle_y_train, pickle_x_test, pickle_y_test, SCR
+from nn_2_easy_train import nn_save_best
 
 from pylearn2.utils import serial
 

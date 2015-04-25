@@ -71,14 +71,12 @@ yaml = """\
         }},
 
         cost: !obj:pylearn2.costs.mlp.dropout.Dropout {{
-            #input_include_probs: {{
-            #    'h0' : .8,
-            #    'h1' : .8
-            #}},
-            #input_scales: {{
-            #    'h0' : 1.,
-            #    'h1' : 1.
-            #}}
+            input_include_probs: {{
+                'h0' : 0.,
+                'h1' : 0.,
+                'h2' : 0.5,
+                'y'  : 0.
+            }},
         }},
 
         # We stop if we don't improve after 10 epochs
