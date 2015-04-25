@@ -72,11 +72,15 @@ yaml = """\
 
         cost: !obj:pylearn2.costs.mlp.dropout.Dropout {{
             input_include_probs: {{
-                'h0' : 0.,
-                'h1' : 0.,
-                'h2' : 0.5,
-                'y'  : 0.,
+                'h0' : 1.,
+                'h1' : 1.,
+                'y'  : 1.,
             }},
+            input_scales: {{
+                'h0' : 1.,
+                'h1' : 1.,
+                'y'  : 1.,
+            }}
         }},
 
         # We stop if we don't improve after 10 epochs
@@ -118,7 +122,7 @@ yaml = """\
 }}
 """.format(
     n_features=n_features,
-    max_norm=0.75,
+    max_norm=0.7,
     save_file=nn_save.format(slope=slope, crater=crater, roughness=roughness),
     save_file_best=nn_save_best.format(slope=slope, crater=crater, roughness=roughness),
     x_train=pickle_x_train.format(slope=slope, crater=crater, roughness=roughness),
