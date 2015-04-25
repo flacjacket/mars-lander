@@ -140,11 +140,9 @@ def main():
     )
     X_test = np.vstack(
         [df_safe[i][int(0.3 * n_safe[i]):int(0.4 * n_safe[i])] for i in range(3)] +
-        [df_unsafe[i][int(0.3 * n_unsafe[i]):int(0.4 * n_safe[i])] for i in range(3)]
+        [df_unsafe[i][int(0.3 * n_unsafe[i]):int(0.4 * n_unsafe[i])] for i in range(3)]
     )
 
-    print(X_train.shape)
-    print(X_test.shape)
     y_train = np.vstack([
         np.ones((sum(int(0.3 * n) for n in n_safe), 1), dtype=int),
         np.zeros((sum(int(0.3 * n) for n in n_unsafe), 1), dtype=int)
