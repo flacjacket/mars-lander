@@ -39,7 +39,6 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
     std::vector<float> dist_unsafe;
     std::vector<unsigned> dloc_unsafe, dloc_base;
 
-    float max_z, max_angle;
     float cos_theta, sin_theta, cos_phi, sin_phi, cos_chi1, cos_chi2;
     float z1, z2, z3, z4;
     float *z_tilt1, *z_tilt2, *z_primary1, *z_primary2;
@@ -93,7 +92,8 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
             }
 
             // figure out if any cause it to be unsafe
-            max_z = max_angle = 0;
+            float z_max = 0;
+            float angle_max = 0;
 
             for (auto z_ind = dloc_unsafe.begin(); z_ind < dloc_unsafe.end(); z_ind++) {
                 unsigned ind = *z_ind;
@@ -171,17 +171,17 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
                         goto is_unsafe;
                     }
 
-                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < max_z) {
-                        max_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
+                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < min_z) {
+                        min_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
                     }
-                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < max_z) {
-                        max_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
+                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < min_z) {
+                        min_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
                     }
-                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < max_z) {
-                        max_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
+                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < min_z) {
+                        min_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
                     }
-                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < max_z) {
-                        max_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
+                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < min_z) {
+                        min_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
                     }
                 }
 

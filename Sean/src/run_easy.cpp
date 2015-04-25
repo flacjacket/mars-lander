@@ -113,11 +113,11 @@ int main(int argc, char* argv[]) {
 
     // Generate the NN input
     std::cout << "Find NN input locations" << std::endl;
-    TIME_IT(tp1, tp2, nn::generate_input(&solution[0], solution.size(), nn_locs));
+    TIME_IT(tp1, tp2, nn::generate_input(solution, nn_locs));
 
     // Generate the NN output
     std::cout << "Generating NN solution" << std::endl;
-    TIME_IT(tp1, tp2, nn::generate_solution(&solution[0], nn_locs, input_image, weights, biases));
+    TIME_IT(tp1, tp2, nn::generate_solution(solution, nn_locs, input_image, weights, biases));
     std::cout << std::endl;
 
     /*************************************************************************
