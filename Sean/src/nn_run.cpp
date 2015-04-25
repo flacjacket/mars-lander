@@ -62,7 +62,7 @@ int nn::read_layer(const char *fname, std::vector<std::vector<float>> &layer_lis
  *
  * Feeds the layer input forward.
  */
-static inline void feed_fwd(float *input, float* output, float* weights, float* bias, unsigned n_inputs, unsigned layer_from, unsigned layer_to) {
+static inline void feed_fwd(std::vector<float> &input, std::vector<float> &output, std::vector<float> &weights, std::vector<float> &bias, unsigned n_inputs, unsigned layer_from, unsigned layer_to) {
     // BLAS takes ~5.7 sec
 
     // Do the matrix multiplication
@@ -73,14 +73,14 @@ static inline void feed_fwd(float *input, float* output, float* weights, float* 
     // dim B: K x N
     cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
                 n_inputs, layer_to, layer_from,  // M, N, K
-                1., input, layer_from,           // alpha, A, leading dim A
-                weights, layer_to,               // B, leading dim B
-                0., output, layer_to);           // beta, C, leading dim C
+                1., &input[0], layer_from,       // alpha, A, leading dim A
+                &weights[0], layer_to,           // B, leading dim B
+                0., &output[0], layer_to);       // beta, C, leading dim C
 
     // Apply the bias vector to the input
     // output = 1 * bias + output
     for (unsigned i = 0; i < n_inputs; i++) {
-        cblas_saxpy(layer_to, 1., bias, 1, output + i * layer_to, 1);
+        cblas_saxpy(layer_to, 1., &bias[0], 1, &output[i * layer_to], 1);
     }
 }
 
@@ -89,7 +89,7 @@ static inline void feed_fwd(float *input, float* output, float* weights, float* 
  *
  * Runs the given vector through the given rectified linear layer.
  */
-static inline void apply_rectified_linear(float *input, float *output, float *weights, float *bias, unsigned n_inputs, unsigned layer_from, unsigned layer_to) {
+static inline void apply_rectified_linear(std::vector<float> &input, std::vector<float> &output, std::vector<float> &weights, std::vector<float> &bias, unsigned n_inputs, unsigned layer_from, unsigned layer_to) {
     // Feed it forward
     feed_fwd(input, output, weights, bias, n_inputs, layer_from, layer_to);
     // Rectify it
@@ -105,7 +105,7 @@ static inline void apply_rectified_linear(float *input, float *output, float *we
  *
  * Runs the given vector through the given softmax layer.
  */
-static inline void apply_softmax(float *input, float *layer, unsigned char* output, float* weights, float* bias, unsigned n_inputs, unsigned layer_from, unsigned layer_to) {
+static inline void apply_softmax(std::vector<float> &input, std::vector<unsigned char> &output, std::vector<float> &weights, std::vector<float> &bias, unsigned n_inputs, unsigned layer_from, unsigned layer_to) {
     // First, we have to feed forward
     std::vector<float> layer(n_inputs * 2);
     feed_fwd(input, layer, weights, bias, n_inputs, layer_from, layer_to);
@@ -113,7 +113,7 @@ static inline void apply_softmax(float *input, float *layer, unsigned char* outp
     // Now, determine correct output
     for (unsigned i = 0; i < n_inputs; i++) {
         // if second column > first column, it is safe
-        output[i] = ((exp(layer[2 * i]) / exp(layer[2 * i + 1])) > NN_CUTOFF) ? SAFE : UNSAFE;
+        output[i] = (layer[2 * i] < layer[2 * i + 1]) ? SAFE : UNSAFE;
     }
 }
 
@@ -122,10 +122,10 @@ static inline void apply_softmax(float *input, float *layer, unsigned char* outp
  *
  * Constructs the vector to feed into the net
  */
-int nn::generate_input(unsigned char *solution, int n_solutions, std::vector<unsigned> &locs) {
+int nn::generate_input(std::vector<unsigned char> &solution, std::vector<unsigned> &locs) {
     int n_inputs = 0;
 
-    for (unsigned i = 0; i < n_solutions; i++) {
+    for (unsigned i = 0; i < solution.size(); i++) {
         // If known safe or unsafe, continue
         if (solution[i] == SAFE || solution[i] == UNSAFE) {
             continue;
@@ -155,12 +155,11 @@ void nn::generate_solution(
     unsigned size_layer3 = biases[2].size();
     unsigned size_output = biases[3].size();
 
-    float* nn_input = malloc(N_BATCH * NN_FEAT * sizeof(float));
-    float* nn_layer1 = malloc(N_BATCH * size_layer1 * sizeof(float));
-    float* nn_layer2 = malloc(N_BATCH * size_layer2 * sizeof(float));
-    float* nn_layer3 = malloc(N_BATCH * size_layer3 * sizeof(float));
-    float *nn_layer_output = malloc(N_BATCH * size_output * sizeof(float));
-    unsigned char* nn_output = malloc(N_BATCH * size_output);
+    std::vector<float> nn_input(N_BATCH * NN_FEAT);
+    std::vector<float> nn_layer1(N_BATCH * size_layer1);
+    std::vector<float> nn_layer2(N_BATCH * size_layer2);
+    std::vector<float> nn_layer3(N_BATCH * size_layer3);
+    std::vector<unsigned char> nn_output(N_BATCH * size_output);
 
     for (i = 0; i < (n_examples - 1) / N_BATCH; i++) {
         std::vector<float>::iterator input_it = nn_input.begin();

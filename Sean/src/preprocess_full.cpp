@@ -15,7 +15,7 @@
 std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
     std::vector<unsigned char> output(NROWS*NCOLS);
 
-    float *x_ne = (float*) malloc(12 * ZH * (ZH - 1) * sizeof(float));
+    float *x_ne = (float*)malloc(12 * ZH * (ZH - 1) * sizeof(float));
     float *x_nw = x_ne + ZH * (ZH - 1);
     float *x_sw = x_ne + 2 * ZH * (ZH - 1);
     float *x_se = x_ne + 3 * ZH * (ZH - 1);
@@ -92,9 +92,6 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
             }
 
             // figure out if any cause it to be unsafe
-            float z_max = 0;
-            float angle_max = 0;
-
             for (auto z_ind = dloc_unsafe.begin(); z_ind < dloc_unsafe.end(); z_ind++) {
                 unsigned ind = *z_ind;
 
@@ -169,19 +166,6 @@ std::vector<unsigned char> preprocess_full(std::vector<float> &data) {
                         z_sw[*base_ind] - (*z_primary1 + *z_primary2) / 2 > HEIGHT_UNSAFE + 0.05 ||
                         z_se[*base_ind] - (*z_primary1 + *z_primary2) / 2 > HEIGHT_UNSAFE + 0.05) {
                         goto is_unsafe;
-                    }
-
-                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < min_z) {
-                        min_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
-                    }
-                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < min_z) {
-                        min_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
-                    }
-                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < min_z) {
-                        min_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
-                    }
-                    if (z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2 < min_z) {
-                        min_z = z_ne[*base_ind] - (*z_primary1 + *z_primary2) / 2;
                     }
                 }
 
