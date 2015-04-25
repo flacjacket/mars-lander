@@ -111,11 +111,12 @@ def main():
         np.zeros((n_unsafe - int(0.9 * n_unsafe), 1), dtype=int),
     ])
 
-    serial.save(pickle_x_train.format(slope=slope), X_train)
-    serial.save(pickle_x_test.format(slope=slope), X_test)
-    serial.save(pickle_y_train.format(slope=slope), y_train)
-    serial.save(pickle_y_test.format(slope=slope), y_test)
+    serial.save(pickle_x_train.format(slope=s), X_train)
+    serial.save(pickle_x_test.format(slope=s), X_test)
+    serial.save(pickle_y_train.format(slope=s), y_train)
+    serial.save(pickle_y_test.format(slope=s), y_test)
     print("done")
+    print(X_train.shape)
 
     ######################################################################
     # Pickle NN input
@@ -131,38 +132,35 @@ def main():
 
     print("Loaded {} safe and {} unsafe training data points".format(sum(n_safe), sum(n_unsafe)))
 
-    tot_train = sum(int(0.4 * n) for n in n_safe) + sum(int(0.4 * n) for n in n_unsafe)
-    tot_test = sum(int(0.1 * n) for n in n_safe) + sum(int(0.1 * n) for n in n_unsafe)
-    print("Saving {} training and {} test points".format(tot_train, tot_test))
     print("Saving data... ", end="")
 
-    X_train = np.empty((tot_train, df_safe[0].shape[1]))
-    X_test = np.empty((tot_train, df_safe[0].shape[1]))
-    y_train = np.empty((tot_train, 1))
-    y_test = np.empty((tot_train, 1))
+    X_train = np.vstack(
+        [df_safe[i][:int(0.3 * n_safe[i])] for i in range(3)] +
+        [df_unsafe[i][:int(0.3 * n_unsafe[i])] for i in range(3)]
+    )
+    X_test = np.vstack(
+        [df_safe[i][int(0.3 * n_safe[i]):int(0.4 * n_safe[i])] for i in range(3)] +
+        [df_unsafe[i][int(0.3 * n_unsafe[i]):int(0.4 * n_safe[i])] for i in range(3)]
+    )
 
-    i_train = 0
-    i_test = 0
-    for df, n in zip(df_safe, n_safe):
-        X_train[i_train:i_train+int(0.4 * n), :] = df[:int(0.4 * n)]
-        X_test[i_test:i_test+int(0.1 * n), :] = df[int(0.4*n):int(0.4*n)+int(0.1 * n)]
-        y_train[i_train:i_train+int(0.4 * n), :] = 1
-        y_test[i_test:i_test+int(0.1 * n), :] = 1
-        i_train += int(0.4 * n)
-        i_test += int(0.1 * n)
+    print(X_train.shape)
+    print(X_test.shape)
+    y_train = np.vstack([
+        np.ones((sum(int(0.3 * n) for n in n_safe), 1), dtype=int),
+        np.zeros((sum(int(0.3 * n) for n in n_unsafe), 1), dtype=int)
+    ])
+    y_test = np.vstack([
+        np.ones((sum(int(0.4*n)-int(0.3 * n) for n in n_safe), 1), dtype=int),
+        np.zeros((sum(int(0.4*n)-int(0.3 * n) for n in n_unsafe), 1), dtype=int)
+    ])
 
-    for df, n in zip(df_unsafe, n_unsafe):
-        X_train[i_train:i_train+int(0.4 * n), :] = df[:int(0.4 * n)]
-        X_test[i_test:i_test+int(0.1 * n), :] = df[int(0.4*n):int(0.4*n)+int(0.1 * n)]
-        y_train[i_train:i_train+int(0.4 * n), :] = 0
-        y_test[i_test:i_test+int(0.1 * n), :] = 0
-        i_train += int(0.4 * n)
-        i_test += int(0.1 * n)
+    del df_safe, df_unsafe
 
     serial.save(pickle_x_train.format(slope=slope), X_train)
     serial.save(pickle_x_test.format(slope=slope), X_test)
     serial.save(pickle_y_train.format(slope=slope), y_train)
     serial.save(pickle_y_test.format(slope=slope), y_test)
+
     print("done")
 
 
