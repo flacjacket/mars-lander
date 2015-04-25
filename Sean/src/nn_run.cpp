@@ -224,4 +224,11 @@ void nn::generate_solution(
         solution[*loc] = nn_output[j];
         loc++;
     }
+
+    free(nn_input);
+    free(nn_layer1);
+    free(nn_layer2);
+    free(nn_layer3);
+    free(nn_layer_output);
+    free(nn_output);
 }

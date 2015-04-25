@@ -20,10 +20,10 @@ input_solution = os.path.join(training_dir, "terrainS{slope}C{crater}R{roughness
 #    if not os.path.exists(check_file):
 #        raise ValueError("File does not exist:", check_file)
 
-output_dir = os.path.join(this_dir, "nn_files_S{slope}C{crater}R{roughness}")
-output_pgm = os.path.join(output_dir, "out_preprocessing.pgm")
-output_png = os.path.join(output_dir, "out_preprocessing.png")
-output_nn = os.path.join(output_dir, "nn_out")
+output_dir = os.path.join(this_dir, "nn_files_S{slope}")
+output_pgm = os.path.join(output_dir, "out_preprocessing_S{slope}C{crater}R{roughness}.pgm")
+output_png = os.path.join(output_dir, "out_preprocessing_S{slope}C{crater}R{roughness}.png")
+output_nn = os.path.join(output_dir, "nn_outS{slope}C{crater}R{roughness}")
 output_nn_safe = output_nn + "_safe.raw"
 output_nn_unsafe = output_nn + "_unsafe.raw"
 
@@ -78,38 +78,39 @@ def main():
         compare_guesses(gen, sol, fill, output_png.format(slope=slope, crater=crater, roughness=roughness))
         print()
 
+    for scr in [[SCR[0]], SCR[1:]]:
+        slope = scr[0][0]
         ######################################################################
         # Pickle NN input
         ######################################################################
 
-        df_safe = np.fromfile(output_nn_safe.format(slope=slope, crater=crater, roughness=roughness), dtype=np.float32).reshape((-1, n_features))
-        df_unsafe = np.fromfile(output_nn_unsafe.format(slope=slope, crater=crater, roughness=roughness), dtype=np.float32).reshape((-1, n_features))
+        df_safe = [np.fromfile(output_nn_safe.format(slope=s, crater=c, roughness=r), dtype=np.float32).reshape((-1, n_features)) for s, c, r in scr]
+        df_unsafe = [np.fromfile(output_nn_unsafe.format(slope=s, crater=c, roughness=r), dtype=np.float32).reshape((-1, n_features)) for s, c, r in scr]
 
-        n_safe = df_safe.shape[0]
-        n_unsafe = df_unsafe.shape[0]
+        n_safe = [df.shape[0] for df in df_safe]
+        n_unsafe = [df.shape[0] for df in df_unsafe]
 
-        print("Loaded {} safe and {} unsafe training data points".format(n_safe, n_unsafe))
-
-        n_test = min(n_safe, n_unsafe)
-        n_train = int(n_test * 0.9)
-
-        print("Training on {}, testing on {}".format(n_train, n_test - n_train))
+        print("Loaded {} safe and {} unsafe training data points".format(sum(n_safe), sum(n_unsafe)))
 
         print("Saving data... ", end="")
-        X_train = np.vstack([df_safe[:n_train, :],
-                             df_unsafe[:n_train, :]])
-        X_test = np.vstack([df_safe[n_train:n_test, :],
-                            df_unsafe[n_train:n_test, :]])
+        X_train = np.vstack([
+            np.vstack(df[:int(0.9 * n), :] for df, n in zip(df_safe, n_safe)),
+            np.vstack(df[:int(0.9 * n), :] for df, n in zip(df_unsafe, n_unsafe))
+        ])
+        X_test = np.vstack([
+            np.vstack(df[int(0.9 * n):, :] for df, n in zip(df_safe, n_safe)),
+            np.vstack(df[int(0.9 * n):, :] for df, n in zip(df_unsafe, n_unsafe))
+        ])
 
-        y_train = np.vstack([np.ones((n_train, 1), dtype=int),
-                             np.zeros((n_train, 1), dtype=int)])
-        y_test = np.vstack([np.ones((n_test - n_train, 1), dtype=int),
-                            np.zeros((n_test - n_train, 1), dtype=int)])
+        y_train = np.vstack([np.ones((sum(int(0.9 * n) for n in n_safe), 1), dtype=int),
+                             np.zeros((sum(int(0.9 * n) for n in n_unsafe), 1), dtype=int)])
+        y_test = np.vstack([np.ones((sum(n - int(0.9 * n) for n in n_safe), 1), dtype=int),
+                             np.zeros((sum(n - int(0.9 * n) for n in n_unsafe), 1), dtype=int)])
 
-        serial.save(pickle_x_train.format(slope=slope, crater=crater, roughness=roughness), X_train)
-        serial.save(pickle_x_test.format(slope=slope, crater=crater, roughness=roughness), X_test)
-        serial.save(pickle_y_train.format(slope=slope, crater=crater, roughness=roughness), y_train)
-        serial.save(pickle_y_test.format(slope=slope, crater=crater, roughness=roughness), y_test)
+        serial.save(pickle_x_train.format(slope=slope), X_train)
+        serial.save(pickle_x_test.format(slope=slope), X_test)
+        serial.save(pickle_y_train.format(slope=slope), y_train)
+        serial.save(pickle_y_test.format(slope=slope), y_test)
         print("done")
 
 

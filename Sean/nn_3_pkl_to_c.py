@@ -34,7 +34,7 @@ def run_net(X, y, w, b):
 
 
 def main():
-    for slope, crater, roughness in SCR:
+    for slope, crater, roughness in SCR[:2]:
         # Load and check the model
         print("Loading model")
         model = serial.load(nn_save_best.format(slope=slope, crater=crater, roughness=roughness))
@@ -47,11 +47,7 @@ def main():
         assert model.layers[3].__class__.__name__ == "Softmax"
 
         # Extract the matrices out of the layers
-        b = []
-        w = []
-
         prev_size = n_features
-
         for i, layer in enumerate(model.layers):
             bias = layer.b.get_value().astype(np.float32)
             try:
@@ -70,14 +66,29 @@ def main():
             bias.tofile(os.path.join(output_dir, 'b{}.raw'.format(i)).format(slope=slope, crater=crater, roughness=roughness))
             weights.tofile(os.path.join(output_dir, 'w{}.raw'.format(i)).format(slope=slope, crater=crater, roughness=roughness))
 
-            b.append(bias)
-            w.append(weights)
-
+    for slope, crater, roughness in SCR:
         print("Checking performance of net...")
 
         # Let's check that the values are reasonable, the training data should have good results
         X = serial.load(pickle_x_train.format(slope=slope, crater=crater, roughness=roughness))
         y = serial.load(pickle_y_train.format(slope=slope, crater=crater, roughness=roughness)).flatten()
+
+        b = []
+        w = []
+        for i, layer in enumerate(model.layers):
+            bias = layer.b.get_value().astype(np.float32)
+            try:
+                # RectifiedLinear uses trainsformer
+                weights = layer.transformer.get_params()[0].get_value().astype(np.float32)
+            except AttributeError:
+                # Softmax uses W
+                weights = layer.W.get_value().astype(np.float32)
+
+            # Quick check dimensions
+            prev_size = weights.shape[1]
+
+            b.append(bias)
+            w.append(weights)
 
         X = run_net(X, y, w, b)
 
