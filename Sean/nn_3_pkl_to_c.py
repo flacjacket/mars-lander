@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from nn_1_preprocess import output_dir, n_features, pickle_x_train, pickle_y_train, pickle_x_test, pickle_y_test, SCR
-from nn_2_easy_train import nn_save_best
+from nn_2_easy_train import nn_save
 
 from pylearn2.utils import serial
 
@@ -37,7 +37,7 @@ def main():
     for slope, crater, roughness in SCR[:2]:
         # Load and check the model
         print("Loading model")
-        model = serial.load(nn_save_best.format(slope=slope, crater=crater, roughness=roughness))
+        model = serial.load(nn_save.format(slope=slope, crater=crater, roughness=roughness))
 
         assert len(model.layers) == 4, "Assuming model has 3 layers (rect lin, rect lin, softmax)"
 
