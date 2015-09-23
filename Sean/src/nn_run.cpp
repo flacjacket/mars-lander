@@ -7,7 +7,7 @@
 #include <cmath>
 #include <fstream>
 #include <vector>
-#include <cblas.h>
+#include <openblas/cblas.h>
 
 #include "nn_run.h"
 

@@ -1,7 +1,7 @@
 #include <algorithm> // std::fill, std::reverse_copy
 #include <cmath>     // atan2, fabs
 #include <vector>
-#include <cblas.h>
+#include <openblas/cblas.h>
 
 #include "preprocess_common.h"
 #include "data_params.h"
