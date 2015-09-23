@@ -72,10 +72,10 @@ yaml = """\
 
         cost: !obj:pylearn2.costs.mlp.dropout.Dropout {{
             input_include_probs: {{
-                'h0' : 0.,
-                'h1' : 0.,
+                'h0' : 1,
+                'h1' : 1,
                 'h2' : 0.5,
-                'y'  : 0.
+                'y'  : 1
             }},
         }},
 
