@@ -20,7 +20,7 @@ input_solution = os.path.join(training_dir, "terrainS{slope}C{crater}R{roughness
 #    if not os.path.exists(check_file):
 #        raise ValueError("File does not exist:", check_file)
 
-output_dir = os.path.join(this_dir, "nn_files_S{slope}")
+output_dir = os.path.join(this_dir, "nn_files_S{slope}C{crater}R{roughness}_C")
 output_pgm = os.path.join(output_dir, "out_preprocessing_S{slope}C{crater}R{roughness}.pgm")
 output_png = os.path.join(output_dir, "out_preprocessing_S{slope}C{crater}R{roughness}.png")
 output_nn = os.path.join(output_dir, "nn_outS{slope}C{crater}R{roughness}")
@@ -82,84 +82,39 @@ def main():
     # Pickle NN input
     ######################################################################
 
-    scr = SCR[0]
-    s, c, r = scr
-    df_safe = np.fromfile(output_nn_safe.format(slope=s, crater=c, roughness=r), dtype=np.float32).reshape((-1, n_features))
-    df_unsafe = np.fromfile(output_nn_unsafe.format(slope=s, crater=c, roughness=r), dtype=np.float32).reshape((-1, n_features))
+    for s, c, r in SCR:
+        df_safe = np.fromfile(output_nn_safe.format(slope=s, crater=c, roughness=r), dtype=np.float32).reshape((-1, n_features))
+        df_unsafe = np.fromfile(output_nn_unsafe.format(slope=s, crater=c, roughness=r), dtype=np.float32).reshape((-1, n_features))
 
-    n_safe = df_safe.shape[0]
-    n_unsafe = df_unsafe.shape[0]
+        n_safe = df_safe.shape[0]
+        n_unsafe = df_unsafe.shape[0]
 
-    print("Loaded {} safe and {} unsafe training data points".format(n_safe, n_unsafe))
+        print("Loaded {} safe and {} unsafe training data points".format(n_safe, n_unsafe))
 
-    print("Saving data... ", end="")
-    X_train = np.vstack([
-        df_safe[:int(0.9 * n_safe), :],
-        df_unsafe[:int(0.9 * n_unsafe), :]
-    ])
-    X_test = np.vstack([
-        df_safe[int(0.9 * n_safe):, :],
-        df_unsafe[int(0.9 * n_unsafe):, :]
-    ])
+        print("Saving data... ", end="")
+        X_train = np.vstack([
+            df_safe[:int(0.9 * n_safe), :],
+            df_unsafe[:int(0.9 * n_unsafe), :]
+        ])
+        X_test = np.vstack([
+            df_safe[int(0.9 * n_safe):, :],
+            df_unsafe[int(0.9 * n_unsafe):, :]
+        ])
 
-    y_train = np.vstack([
-        np.ones((int(0.9 * n_safe), 1), dtype=int),
-        np.zeros((int(0.9 * n_unsafe), 1), dtype=int),
-    ])
-    y_test = np.vstack([
-        np.ones((n_safe - int(0.9 * n_safe), 1), dtype=int),
-        np.zeros((n_unsafe - int(0.9 * n_unsafe), 1), dtype=int),
-    ])
+        y_train = np.vstack([
+            np.ones((int(0.9 * n_safe), 1), dtype=int),
+            np.zeros((int(0.9 * n_unsafe), 1), dtype=int),
+        ])
+        y_test = np.vstack([
+            np.ones((n_safe - int(0.9 * n_safe), 1), dtype=int),
+            np.zeros((n_unsafe - int(0.9 * n_unsafe), 1), dtype=int),
+        ])
 
-    serial.save(pickle_x_train.format(slope=s), X_train)
-    serial.save(pickle_x_test.format(slope=s), X_test)
-    serial.save(pickle_y_train.format(slope=s), y_train)
-    serial.save(pickle_y_test.format(slope=s), y_test)
-    print("done")
-    print(X_train.shape)
-
-    ######################################################################
-    # Pickle NN input
-    ######################################################################
-
-    scr = SCR[1:]
-    slope = scr[0][0]
-    df_safe = [np.fromfile(output_nn_safe.format(slope=s, crater=c, roughness=r), dtype=np.float32).reshape((-1, n_features)) for s, c, r in scr]
-    df_unsafe = [np.fromfile(output_nn_unsafe.format(slope=s, crater=c, roughness=r), dtype=np.float32).reshape((-1, n_features)) for s, c, r in scr]
-
-    n_safe = [df.shape[0] for df in df_safe]
-    n_unsafe = [df.shape[0] for df in df_unsafe]
-
-    print("Loaded {} safe and {} unsafe training data points".format(sum(n_safe), sum(n_unsafe)))
-
-    print("Saving data... ", end="")
-
-    X_train = np.vstack(
-        [df_safe[i][:int(0.3 * n_safe[i])] for i in range(3)] +
-        [df_unsafe[i][:int(0.3 * n_unsafe[i])] for i in range(3)]
-    )
-    X_test = np.vstack(
-        [df_safe[i][int(0.3 * n_safe[i]):int(0.4 * n_safe[i])] for i in range(3)] +
-        [df_unsafe[i][int(0.3 * n_unsafe[i]):int(0.4 * n_unsafe[i])] for i in range(3)]
-    )
-
-    y_train = np.vstack([
-        np.ones((sum(int(0.3 * n) for n in n_safe), 1), dtype=int),
-        np.zeros((sum(int(0.3 * n) for n in n_unsafe), 1), dtype=int)
-    ])
-    y_test = np.vstack([
-        np.ones((sum(int(0.4*n)-int(0.3 * n) for n in n_safe), 1), dtype=int),
-        np.zeros((sum(int(0.4*n)-int(0.3 * n) for n in n_unsafe), 1), dtype=int)
-    ])
-
-    del df_safe, df_unsafe
-
-    serial.save(pickle_x_train.format(slope=slope), X_train)
-    serial.save(pickle_x_test.format(slope=slope), X_test)
-    serial.save(pickle_y_train.format(slope=slope), y_train)
-    serial.save(pickle_y_test.format(slope=slope), y_test)
-
-    print("done")
+        serial.save(pickle_x_train.format(slope=s, crater=c, roughness=r), X_train)
+        serial.save(pickle_x_test.format(slope=s, crater=c, roughness=r), X_test)
+        serial.save(pickle_y_train.format(slope=s, crater=c, roughness=r), y_train)
+        serial.save(pickle_y_test.format(slope=s, crater=c, roughness=r), y_test)
+        print("done")
 
 
 if __name__ == "__main__":
