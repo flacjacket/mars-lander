@@ -27,10 +27,10 @@ anything up to PyPI, so you will have to install from the latest git source. In
 order to do that, with a working git install, you will need to pull their
 [Github repo](https://github.com/lisa-lab/pylearn2) and install from there. To
 do this:
-    ```bash
-    git clone git://github.com/lisa-lab/pylearn2.git
-    python setup.py install
-    ```
+```bash
+git clone git://github.com/lisa-lab/pylearn2.git
+python setup.py install
+```
 More information is detailed in the
 [docs](http://deeplearning.net/software/pylearn2/#download-and-installation).
 
