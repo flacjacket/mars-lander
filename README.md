@@ -1,20 +1,5 @@
 # mars-lander
 
-# Sean
+Code used for the "Planetary Explorers" entry into the 2015 NASA Jet Propulsion Laboratory Team Space Design Competition at the University of Illinois at Urbana-Champaign.
 
-## Things that work
-
-- [x] Graphical comparison of test pgm vs output pgm (`bin/compare_output.py`)
-
-- [x] Training neural net against pgm data (`bin/train_nn.py` hard-coded to
-  train simplest data set)
-
-## Working on
-
-- [ ] Training simple neural net against height data
-
-- [ ] Train with cross-validation set
-
-- [ ] Theano?
-
-- [ ] OO-ify some of the NN stuff
+For more information and links, see the notebook [write-up on the competition](nb/nn-nb.ipynb).
